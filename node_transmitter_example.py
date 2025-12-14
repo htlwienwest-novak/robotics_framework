@@ -4,11 +4,11 @@
 import random
 from libs.lib_telemtrybroker import TelemetryBroker
 
-mb = TelemetryBroker()
+mb = TelemetryBroker() 
 
 keys = ["vel_linear_x", "vel_linear_y", "vel_linear_z", "vel_angular_x", "vel_angular_y", "vel_angular_z"]
 
-for c in range(100):
+while True:
     try:
         for k in keys:
             val = random.randint(0, 100)
