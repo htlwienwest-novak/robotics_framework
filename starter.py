@@ -28,10 +28,13 @@ print("Start of", len(files), "nodes from path:", SCRIPT_PATH)
 
 for file in files:
     print(file)
-    #LINUX:
-    #command = f'python "{file}"; echo "Skript beendet. Drücke Enter zum Schließen..."; read'
-    #subprocess.Popen(["lxterminal", "--command", f"bash -c '{command}'"])
 
-    #WINDOWS:
-    command = f'python "{file}"'
-    subprocess.Popen(f'start cmd /k "{command}"', shell=True)
+    if os.name == 'posix':
+        #LINUX:
+        command = f'python "{file}"; echo "Skript beendet. Drücke Enter zum Schließen..."; read'
+        subprocess.Popen(["lxterminal", "--command", f"bash -c '{command}'"])
+
+    elif os.name == 'nt':
+        #WINDOWS:
+        command = f'python "{file}"'
+        subprocess.Popen(f'start cmd /k "{command}"', shell=True)
