@@ -6,15 +6,15 @@ from libs.lib_telemtrybroker import TelemetryBroker
 
 mb = TelemetryBroker() 
 
-keys = ["vel_linear_x", "vel_linear_y", "vel_linear_z", "vel_angular_x", "vel_angular_y", "vel_angular_z"]
+vel_dict = {"vel_linear_x":0, "vel_linear_y":0, "vel_linear_z":0, "vel_angular_x":0, "vel_angular_y":0, "vel_angular_z":0}
 
 while True:
     try:
-        for k in keys:
-            val = random.randint(0, 100)
-            mb.set(k, val)
+        for k, v in vel_dict.items():
+            vel_dict[k] = random.randint(0, 100)
 
-            print(k,val)
+        print(vel_dict)
+        mb.setmulti(vel_dict)
 
     except KeyboardInterrupt:
         break
