@@ -6,6 +6,7 @@ import time
 
 mb = TelemetryBroker()
 
+
 def cb_getmessage(key, value):
     print("CALLBACK:", key, value)
 
@@ -14,3 +15,4 @@ keys = ["vel_linear_x", "vel_linear_y", "vel_linear_z", "vel_angular_x", "vel_an
 mb.setcallback(keys, cb_getmessage)
 
 mb.receiver_loop()
+mb.close()

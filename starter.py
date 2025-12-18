@@ -16,8 +16,12 @@ import os
 import subprocess
 import glob
 import time
+from libs.lib_telemtrybroker import TelemetryBroker
 
 #time.sleep(5)
+
+mb = TelemetryBroker() 
+mb.clearall()
 
 SCRIPT_PATH = os.path.dirname(os.path.abspath(__file__))
 MUSTER = "node_*.py"

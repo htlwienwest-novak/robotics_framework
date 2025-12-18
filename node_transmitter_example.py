@@ -19,3 +19,4 @@ while True:
     except KeyboardInterrupt:
         break
 
+mb.close()

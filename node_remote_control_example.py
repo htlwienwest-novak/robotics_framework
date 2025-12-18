@@ -9,7 +9,7 @@ mb = TelemetryBroker()
 
 while True:
     try:
-        time.sleep(0.5)
+        #time.sleep(0.5)
         data = mb.getall()
         os.system('cls' if os.name == 'nt' else 'clear')
         for key, value in data.items():

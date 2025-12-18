@@ -14,20 +14,31 @@ class TelemetryBroker:
     #   port        - redis server port
     #   db          - redis database number
     def __init__(self, host="localhost", port=6379, db=0):
-        self._r = redis.Redis(host=host, port=port, db=db, decode_responses=True)
-        self._dict_cache = {}
-        self._nodename = None
-        self._register_node()
-        self._cb_keys = []
-        self._cb_function = ""
+        self.__r = redis.Redis(host=host, port=port, db=db, decode_responses=True)
+        self.__cb_dict = {}
+        self.__nodename = None
+        self.__register_node()
+        self.__cb_function = ""
 
     # Destructor
     def __del__(self):
-        self._r.close()
+        self.close()
+
+    # Close connection to database
+    def close(self):
+        self.delkey(self.__nodename)
+        self.__r.close()
+
+
+    # Clear all data in database
+    def clearall(self):
+        self.__r.flushall()
 
     # Validate and casting
     #   value    - input as string
     def type_validator(self, value):
+        if value == None:
+            return None
         cvalue = value.replace('-', '', 1)
         if cvalue.isdigit():
             return int(value)
@@ -36,10 +47,10 @@ class TelemetryBroker:
         return value
 
     # Register current node in redis
-    def _register_node(self):
-        self._nodename = Path(sys.argv[0]).stem
-        print("register node:",self._nodename)
-        self._r.set(self._nodename, 1)
+    def __register_node(self):
+        self.__nodename = Path(sys.argv[0]).stem
+        print("register node:",self.__nodename)
+        self.__r.set(self.__nodename, 1)
 
     # Set other node activation state
     def set_other_node_activation(self, nodename, value):
@@ -47,7 +58,7 @@ class TelemetryBroker:
 
     # Check activation state from node
     def is_active_node(self):
-        return bool(self._r.get(self._nodename))
+        return bool(self.__r.get(self.__nodename))
 
     # Set value in the cache
     #   name    - key name
@@ -57,14 +68,14 @@ class TelemetryBroker:
             return
         if isinstance(value, bool):
             value = int(value)
-        self._r.set(name, value)
+        self.__r.set(name, value)
 
     # Get value from the cache
     #   name    - key name
     def get(self, name):
         if not self.is_active_node():
             return None
-        return self.type_validator(self._r.get(name))
+        return self.type_validator(self.__r.get(name))
 
     # Set multi key-value paris to cache
     #   dict    - dictionary
@@ -74,39 +85,50 @@ class TelemetryBroker:
         for k,v in dict.items():
             if isinstance(v, bool):
                 dict[k] = int(v)
-        self._r.mset(dict)
+        self.__r.mset(dict)
 
     # Get multi key-value pairs from the cache
     #   keys    - list of keys
     def getmulti(self, keys):
         if not self.is_active_node():
             return None
-        rec_list = self._r.mget(keys)
+        rec_list = self.__r.mget(keys)
         for c in range(len(rec_list)):
             rec_list[c] = self.type_validator(rec_list[c])
         return dict(zip(keys, rec_list))
     
     # Get all key-value pairs from redis db
     def getall(self):
-        return {}
-
+        all_keys = []
+        for key in self.__r.scan_iter(match="*", count=20):
+            all_keys.append(key)
+            
+        return self.getmulti(all_keys)
+    
+    # Delete key
+    #   key    - key name   
+    def delkey(self, key):
+        self.__r.delete(key)
+    
     # Set callback function for keys
     #   keys    - list of key names to monitor
     #   cbfunc  - callback function to call on value change
     def setcallback(self, keys, cbfunc):
-        self._cb_dict = dict.fromkeys(keys)
-        self._cb_function = cbfunc
+        self.__cb_dict = dict.fromkeys(keys)
+        self.__cb_function = cbfunc
 
     # Checks messages from redis
     def receiver_loop(self):
         while True:
             if not self.is_active_node():
                 continue
-
-            for k, v in self.getmulti(self._cb_dict.keys()):
-                if self._cb_dict[k] == v:
+            rec_dict = self.getmulti(self.__cb_dict.keys())
+            if rec_dict == None:
+                continue
+            for k, v in rec_dict.items():
+                if self.__cb_dict[k] == v:
                     continue
-                self._cb_dict[k] = v
-                self._cb_function(k, v)
+                self.__cb_dict[k] = v
+                self.__cb_function(k, v)
 
 
