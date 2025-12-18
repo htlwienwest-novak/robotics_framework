@@ -25,6 +25,16 @@ class TelemetryBroker:
     def __del__(self):
         self._r.close()
 
+    # Validate and casting
+    #   value    - input as string
+    def type_validator(self, value):
+        cvalue = value.replace('-', '', 1)
+        if cvalue.isdigit():
+            return int(value)
+        if cvalue.replace('.', '', 1).isdigit():
+            return float(value)
+        return value
+
     # Register current node in redis
     def _register_node(self):
         self._nodename = Path(sys.argv[0]).stem
@@ -45,6 +55,8 @@ class TelemetryBroker:
     def set(self, name, value):
         if not self.is_active_node():
             return
+        if isinstance(value, bool):
+            value = int(value)
         self._r.set(name, value)
 
     # Get value from the cache
@@ -52,13 +64,16 @@ class TelemetryBroker:
     def get(self, name):
         if not self.is_active_node():
             return None
-        return self._r.get(name)
+        return self.type_validator(self._r.get(name))
 
     # Set multi key-value paris to cache
     #   dict    - dictionary
     def setmulti(self, dict):
         if len(dict) == 0:
             return
+        for k,v in dict.items():
+            if isinstance(v, bool):
+                dict[k] = int(v)
         self._r.mset(dict)
 
     # Get multi key-value pairs from the cache
@@ -66,7 +81,10 @@ class TelemetryBroker:
     def getmulti(self, keys):
         if not self.is_active_node():
             return None
-        return self._r.mget(keys)
+        rec_list = self._r.mget(keys)
+        for c in range(len(rec_list)):
+            rec_list[c] = self.type_validator(rec_list[c])
+        return dict(zip(keys, rec_list))
     
     # Get all key-value pairs from redis db
     def getall(self):
@@ -84,12 +102,11 @@ class TelemetryBroker:
         while True:
             if not self.is_active_node():
                 continue
-            retrieved_values = self._r.mget(self._cb_dict.keys())
 
-            for key, value in zip(self._cb_dict.keys(), retrieved_values):
-                if self._cb_dict[key] == value:
+            for k, v in self.getmulti(self._cb_dict.keys()):
+                if self._cb_dict[k] == v:
                     continue
-                self._cb_dict[key] = value
-                self._cb_function(key, value)
+                self._cb_dict[k] = v
+                self._cb_function(k, v)
 
 
