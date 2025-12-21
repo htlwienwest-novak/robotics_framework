@@ -17,6 +17,7 @@ class TelemetryBroker:
         self.__r = redis.Redis(host=host, port=port, db=db, decode_responses=True)
         self.__cb_dict = {}
         self.__nodename = None
+        self.__node_start_permission = 2   # 0:nothing, 1:read, 2:read,write,del,clear
         self.__register_node()
         self.__cb_function = ""
 
@@ -32,6 +33,8 @@ class TelemetryBroker:
 
     # Clear all data in database
     def clearall(self):
+        if self.get_node_permission() < 2:
+            return
         self.__r.flushall()
 
     # Validate and casting
@@ -50,21 +53,17 @@ class TelemetryBroker:
     def __register_node(self):
         self.__nodename = Path(sys.argv[0]).stem
         print("register node:",self.__nodename)
-        self.__r.set(self.__nodename, 1)
-
-    # Set other node activation state
-    def set_other_node_activation(self, nodename, value):
-        self.set(nodename, int(value))
+        self.__r.set(self.__nodename, self.__node_start_permission)
 
     # Check activation state from node
-    def is_active_node(self):
-        return bool(self.__r.get(self.__nodename))
+    def get_node_permission(self):
+        return self.__r.get(self.__nodename)
 
     # Set value in the cache
     #   name    - key name
     #   value   - value to set
     def set(self, name, value):
-        if not self.is_active_node():
+        if self.get_node_permission() < 2:
             return
         if isinstance(value, bool):
             value = int(value)
@@ -73,13 +72,15 @@ class TelemetryBroker:
     # Get value from the cache
     #   name    - key name
     def get(self, name):
-        if not self.is_active_node():
+        if self.get_node_permission() < 1:
             return None
         return self.type_validator(self.__r.get(name))
 
     # Set multi key-value paris to cache
     #   dict    - dictionary
     def setmulti(self, dict):
+        if self.get_node_permission() < 2:
+            return None
         if len(dict) == 0:
             return
         for k,v in dict.items():
@@ -90,7 +91,7 @@ class TelemetryBroker:
     # Get multi key-value pairs from the cache
     #   keys    - list of keys
     def getmulti(self, keys):
-        if not self.is_active_node():
+        if self.get_node_permission() < 1:
             return None
         rec_list = self.__r.mget(keys)
         for c in range(len(rec_list)):
@@ -99,6 +100,8 @@ class TelemetryBroker:
     
     # Get all key-value pairs from redis db
     def getall(self):
+        if self.get_node_permission() < 1:
+            return None
         all_keys = []
         for key in self.__r.scan_iter(match="*", count=20):
             all_keys.append(key)
@@ -108,6 +111,8 @@ class TelemetryBroker:
     # Delete key
     #   key    - key name   
     def delkey(self, key):
+        if self.get_node_permission() < 2:
+            return None
         self.__r.delete(key)
     
     # Set callback function for keys
@@ -120,7 +125,7 @@ class TelemetryBroker:
     # Checks messages from redis
     def receiver_loop(self):
         while True:
-            if not self.is_active_node():
+            if self.get_node_permission() < 1:
                 continue
             rec_dict = self.getmulti(self.__cb_dict.keys())
             if rec_dict == None:
