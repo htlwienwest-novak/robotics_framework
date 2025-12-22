@@ -57,7 +57,7 @@ class TelemetryBroker:
 
     # Check activation state from node
     def get_node_permission(self):
-        return self.__r.get(self.__nodename)
+        return self.type_validator(self.__r.get(self.__nodename))
 
     # Set value in the cache
     #   name    - key name
