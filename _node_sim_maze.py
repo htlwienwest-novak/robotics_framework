@@ -132,6 +132,8 @@ class Robot:
         self.x = x + tilesize / 2
         self.y = y + tilesize / 2
 
+        self.scale = int(tilesize / 30)
+
         pygame_icon = pygame.image.load(io.BytesIO(base64.b64decode(robot1_base64)))
         pygame.display.set_icon(pygame_icon)
 
@@ -203,22 +205,24 @@ class Robot:
         self.maze_surface = surface
         self.collision = False
         self.steps = 0
-        
+        self.collision = False
 
 
     def get_sensor_data(self, sensor_dict):
         sensor_dict["sensor_angular_z"] = self.direction
-        sensor_dict["sensor_linear_x"] = self.steps
-        self.distance_detection()
-        sensor_dict["sensor_distance_front"] = self.distance_front
-        sensor_dict["sensor_distance_right"] = self.distance_right
-        sensor_dict["sensor_distance_left"] = self.distance_left
-        sensor_dict["sensor_distance_back"] = self.distance_back
+        sensor_dict["sensor_linear_x"] = int(self.steps/self.scale)
+        self.sensor_detection()
+        sensor_dict["sensor_distance_front"] = int(self.distance_front/self.scale)
+        sensor_dict["sensor_distance_right"] = int(self.distance_right/self.scale)
+        sensor_dict["sensor_distance_left"] = int(self.distance_left/self.scale)
+        sensor_dict["sensor_distance_back"] = int(self.distance_back/self.scale)
         sensor_dict["sensor_front_color"] = str(self.front_color_detect)
         sensor_dict["sensor_floor_color"] = str(self.floor_color_detect)
         return sensor_dict
 
     def move(self, screen, linear_x, angular_z):
+        self.collision_detect()
+
         linear_x = int(linear_x)
         angular_z = int(angular_z)
 
@@ -233,13 +237,15 @@ class Robot:
             x=self.rect_robot.center[0]+a
             y=self.rect_robot.center[1]-b
 
-            self.x = x
-            self.y = y
+            if self.collision != True:
+                self.x = x
+                self.y = y
 
-            if linear_x < 0:   # rückwärts
-                self.steps -= 1
-            else:
-                self.steps += 1
+                if linear_x < 0:   # rückwärts
+                    self.steps -= 1
+                else:
+                    self.steps += 1
+    
             self.rect_robot.center = (self.x, self.y)
             self.rect_distance_front.center = self.rect_robot.center
             self.rect_distance_left.center = self.rect_robot.center
@@ -288,7 +294,7 @@ class Robot:
         screen.blit(self.layer_distance_left, (0, 0))
         screen.blit(self.layer_distance_back, (0, 0))
 
-    def distance_detection(self):
+    def sensor_detection(self):
         self.mask_maze_surface = pygame.mask.from_surface(self.maze_surface)
         
         #distance_front:
@@ -299,8 +305,8 @@ class Robot:
         else:
             a=colpoint[0]-self.rect_distance_front.center[0]
             b=colpoint[1]-self.rect_distance_front.center[1]
-            self.distance_front = int(math.sqrt(abs(a)**2 + abs(b)**2))-30
-        
+            self.distance_front = int(math.sqrt(abs(a)**2 + abs(b)**2))
+
         # get color from front
         try:
             if self.distance_front < 30 and self.maze_surface.get_at(colpoint) is not None and self.maze_surface.get_at(colpoint) != (0,0,0,255):
@@ -328,7 +334,7 @@ class Robot:
         else:
             a=colpoint[0]-self.rect_distance_left.center[0]
             b=colpoint[1]-self.rect_distance_left.center[1]
-            self.distance_left = int(math.sqrt(abs(a)**2 + abs(b)**2))-30
+            self.distance_left = int(math.sqrt(abs(a)**2 + abs(b)**2))
 
         # distance_right:
         self.mask_distance_right = pygame.mask.from_surface(self.layer_distance_right)
@@ -338,7 +344,7 @@ class Robot:
         else:
             a=colpoint[0]-self.rect_distance_right.center[0]
             b=colpoint[1]-self.rect_distance_right.center[1]
-            self.distance_right = int(math.sqrt(abs(a)**2 + abs(b)**2))-30
+            self.distance_right = int(math.sqrt(abs(a)**2 + abs(b)**2))
 
         # distance_back:
         self.mask_distance_back = pygame.mask.from_surface(self.layer_distance_back)
@@ -348,7 +354,21 @@ class Robot:
         else:
             a=colpoint[0]-self.rect_distance_back.center[0]
             b=colpoint[1]-self.rect_distance_back.center[1]
-            self.distance_back = int(math.sqrt(abs(a)**2 + abs(b)**2))-30
+            self.distance_back = int(math.sqrt(abs(a)**2 + abs(b)**2))
+
+    def collision_detect(self):
+        if self.distance_front==0 or self.distance_back == 0:
+            return
+        if self.distance_front/self.scale < 7 or self.distance_back/self.scale < 7:
+            self.collision = True
+            self.show_text("COLLISION", self.layer_robot.get_rect().center)
+
+    def show_text(self, text, position, size=20, color=(255,0,0)):
+        font = pygame.font.SysFont("couriernew", size)
+        textrender = font.render(text, True, color)
+        textsize = font.size(text)
+        finalpos = (position[0]-textsize[0]/2, position[1])
+        self.maze_surface.blit(textrender, finalpos)
 
 class Gametable():
     def __init__(self, WIDTH, HEIGHT):
@@ -371,8 +391,20 @@ class Gametable():
 
 mb = TelemetryBroker()
 
-vel_dict = {"vel_linear_x":100, "vel_angular_z":0}
-sensor_dict = {"sensor_angular_z":0, "sensor_linear_x":0}
+vel_dict = {"vel_linear_x":0, 
+            "vel_angular_z":0}
+sensor_dict = {"sensor_angular_z":0, 
+               "sensor_linear_x":0,
+               "sensor_distance_front":1000,
+               "sensor_distance_right":1000,
+               "sensor_distance_left":1000,
+               "sensor_distance_back":1000,
+               "sensor_front_color":"None",
+               "sensor_floor_color":"None"
+               }
+
+mb.setmulti(vel_dict)
+mb.setmulti(sensor_dict)
 
 # READ DATA FROM EXCEL MAP
 mymap = Map()
