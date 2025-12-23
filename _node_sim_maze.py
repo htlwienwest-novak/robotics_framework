@@ -143,10 +143,10 @@ class Robot:
         self.image_distance_back_orig = pygame.image.load(io.BytesIO(base64.b64decode(distancesensorback_base64)))
 
         self.image_robot_orig = pygame.transform.scale(self.image_robot_orig, (tilesize/2, tilesize/2))
-        self.image_distance_front_orig = pygame.transform.scale(self.image_distance_front_orig, (tilesize/4, tilesize*4))
-        self.image_distance_left_orig = pygame.transform.scale(self.image_distance_left_orig, (tilesize*4, tilesize/4))
-        self.image_distance_right_orig = pygame.transform.scale(self.image_distance_right_orig, (tilesize*4, tilesize/4))
-        self.image_distance_back_orig = pygame.transform.scale(self.image_distance_back_orig, (tilesize/4, tilesize*4))
+        self.image_distance_front_orig = pygame.transform.scale(self.image_distance_front_orig, (tilesize/4, tilesize*8))
+        self.image_distance_left_orig = pygame.transform.scale(self.image_distance_left_orig, (tilesize*8, tilesize/4))
+        self.image_distance_right_orig = pygame.transform.scale(self.image_distance_right_orig, (tilesize*8, tilesize/4))
+        self.image_distance_back_orig = pygame.transform.scale(self.image_distance_back_orig, (tilesize/4, tilesize*8))
 
         self.image_robot = self.image_robot_orig.copy()
         self.image_distance_front = self.image_distance_front_orig.copy()
@@ -194,6 +194,8 @@ class Robot:
         self.distance_left = 0
         self.distance_right = 0
         self.distance_back = 0
+        self.front_color_detect = None
+        self.floor_color_detect = None
 
         self.direction = 0               # Aktuelle Blickrichtung
         #self.image = pygame.transform.rotate(self.original_image, self.direction)
@@ -212,6 +214,8 @@ class Robot:
         sensor_dict["sensor_distance_right"] = self.distance_right
         sensor_dict["sensor_distance_left"] = self.distance_left
         sensor_dict["sensor_distance_back"] = self.distance_back
+        sensor_dict["sensor_front_color"] = str(self.front_color_detect)
+        sensor_dict["sensor_floor_color"] = str(self.floor_color_detect)
         return sensor_dict
 
     def move(self, screen, linear_x, angular_z):
@@ -297,6 +301,25 @@ class Robot:
             b=colpoint[1]-self.rect_distance_front.center[1]
             self.distance_front = int(math.sqrt(abs(a)**2 + abs(b)**2))-30
         
+        # get color from front
+        try:
+            if self.distance_front < 30 and self.maze_surface.get_at(colpoint) is not None and self.maze_surface.get_at(colpoint) != (0,0,0,255):
+                self.front_color_detect = (self.maze_surface.get_at(colpoint)[0], self.maze_surface.get_at(colpoint)[1], self.maze_surface.get_at(colpoint)[2])
+            else:
+                self.front_color_detect = None
+        except:
+            self.front_color_detect = None
+
+        # get color from floor
+        a=self.tilesize/4 * math.sin(math.radians(self.direction))
+        b=self.tilesize/4 * math.cos(math.radians(self.direction))
+        x=int(self.rect_robot.center[0]+a)
+        y=int(self.rect_robot.center[1]-b)
+        try:
+            self.floor_color_detect = (self.maze_surface.get_at((x,y))[0], self.maze_surface.get_at((x,y))[1], self.maze_surface.get_at((x,y))[2])
+        except:
+            self.floor_color_detect = None
+
         # distance_left:
         self.mask_distance_left = pygame.mask.from_surface(self.layer_distance_left)
         colpoint = self.mask_distance_left.overlap(self.mask_maze_surface,(0,0))
