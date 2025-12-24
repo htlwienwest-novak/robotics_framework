@@ -12,6 +12,7 @@ distancesensorback_base64 = "iVBORw0KGgoAAAANSUhEUgAAAOYAAADmAQMAAAD7pGv4AAAAAXN
 from libs.lib_telemtrybroker import TelemetryBroker
 
 import openpyxl
+from openpyxl.styles.colors import COLOR_INDEX
 import pygame
 import sys
 import time
@@ -53,7 +54,13 @@ class Map:
                 except (IndexError, TypeError):
                     pass
             elif color_obj.type == 'theme':
-                return color_obj.theme
+                print(color_obj.theme)
+                THEME_COLORS = {
+                0: "FFFFFF", 1: "000000", 2: "E7E6E6", 3: "44546A",
+                4: "4472C4", 5: "ED7D31", 6: "A5A5A5", 7: "FFC000",
+                8: "5B9BD5", 9: "70AD47", 10: "0563C1", 11: "954F72"}
+                
+                return "FF"+THEME_COLORS[color_obj.theme]
             elif color_obj.auto:
                 return "FF000000"
         except:
@@ -73,7 +80,9 @@ class Map:
         cell = self.__sheet[self.__convert_index_to_xls(coords)]
 
         value = cell.value
-        color = self.__color_hex_to_dec(self.__validate_color(cell.fill.start_color.index))
+        print(coords,cell.fill.start_color.type)
+        color = self.__color_hex_to_dec(self.__validate_color(cell.fill.start_color))
+        print(coords,color)
 
         border_nord = self.__is_wall(cell.border.top.style)
         border_ost = self.__is_wall(cell.border.right.style)
@@ -100,14 +109,17 @@ class Map:
 
 
 class Tile:
-    def draw(self, info, maze_surface, TILE_SIZE=60):
+    def __init__(self):
+        self.cellvalue = ""
+
+    def draw(self, info, maze_surface, maze_coloredtiles, TILE_SIZE=60):
         x = info["coords"][0]
         y = info["coords"][1]
-
-        #print(info)
+        self.cellvalue = info["value"]
+        print(info)
 
         tile_rect = pygame.Rect(TILE_SIZE*x+2, TILE_SIZE*y+2, TILE_SIZE-4, TILE_SIZE-4)
-        pygame.draw.rect(maze_surface, info["color"], tile_rect)
+        pygame.draw.rect(maze_coloredtiles, info["color"], tile_rect)
        
 
         if info["walls"]["west"]["exists"]:
@@ -124,14 +136,14 @@ class Tile:
             pygame.draw.rect(maze_surface, info["walls"]["sud"]["color"], wall_sud_rect)
 
 
-        return maze_surface
+        return maze_surface, maze_coloredtiles
 
 class Robot:
-    def __init__(self, x, y, tilesize, surface):
+    def __init__(self, start_tile, start_direction, tilesize, surface, surface_coloredtiles):
 
-        self.x = x + tilesize / 2
-        self.y = y + tilesize / 2
-
+        self.x = start_tile[0] * tilesize + tilesize / 2
+        self.y = start_tile[1] * tilesize + tilesize / 2
+        self.direction = start_direction
         self.scale = int(tilesize / 30)
 
         pygame_icon = pygame.image.load(io.BytesIO(base64.b64decode(robot1_base64)))
@@ -167,18 +179,29 @@ class Robot:
         self.rect_distance_left.center = self.rect_robot.center
         self.rect_distance_right.center = self.rect_robot.center
         self.rect_distance_back.center = self.rect_robot.center
+        self.rect_robot_center_last = self.rect_robot.center
 
         self.layer_robot = pygame.Surface(surface.get_size())
         self.layer_distance_front = pygame.Surface(surface.get_size())
         self.layer_distance_right = pygame.Surface(surface.get_size())
         self.layer_distance_left = pygame.Surface(surface.get_size())
-        self.layer_distance_back = pygame.Surface(surface.get_size())  
+        self.layer_distance_back = pygame.Surface(surface.get_size())
+        self.layer_painting = pygame.Surface(surface.get_size())
 
         self.layer_robot.set_colorkey((255, 255, 255))
         self.layer_distance_front.set_colorkey((255, 255, 255))
         self.layer_distance_right.set_colorkey((255, 255, 255))
         self.layer_distance_left.set_colorkey((255, 255, 255))
         self.layer_distance_back.set_colorkey((255, 255, 255))
+        self.layer_painting.set_colorkey((255, 255, 255))
+
+        self.layer_painting.fill((255,255,255))
+
+        self.image_robot = pygame.transform.rotate(self.image_robot_orig, -self.direction)
+        self.image_distance_front = pygame.transform.rotate(self.image_distance_front_orig, -self.direction)
+        self.image_distance_left = pygame.transform.rotate(self.image_distance_left_orig, -self.direction)
+        self.image_distance_right = pygame.transform.rotate(self.image_distance_right_orig, -self.direction)
+        self.image_distance_back = pygame.transform.rotate(self.image_distance_back_orig, -self.direction)
 
         self.layer_robot.blit(self.image_robot,self.rect_robot)
         self.layer_distance_front.blit(self.image_distance_front,self.rect_distance_front)
@@ -199,13 +222,13 @@ class Robot:
         self.front_color_detect = None
         self.floor_color_detect = None
 
-        self.direction = 0               # Aktuelle Blickrichtung
         #self.image = pygame.transform.rotate(self.original_image, self.direction)
         self.tilesize = tilesize
         self.maze_surface = surface
+        self.maze_coloredtiles = surface_coloredtiles
         self.collision = False
         self.steps = 0
-        self.collision = False
+        self.painting = True
 
 
     def get_sensor_data(self, sensor_dict):
@@ -220,11 +243,12 @@ class Robot:
         sensor_dict["sensor_floor_color"] = str(self.floor_color_detect)
         return sensor_dict
 
-    def move(self, screen, linear_x, angular_z):
+    def move(self, screen, vel_dict):
         self.collision_detect()
 
-        linear_x = int(linear_x)
-        angular_z = int(angular_z)
+        linear_x = int(vel_dict["vel_linear_x"])
+        angular_z = int(vel_dict["vel_angular_z"])
+        self.painting = bool(vel_dict["tool_pen"])
 
         if linear_x != 0 and angular_z == 0:
             # linear
@@ -237,14 +261,14 @@ class Robot:
             x=self.rect_robot.center[0]+a
             y=self.rect_robot.center[1]-b
 
-            if self.collision != True:
-                self.x = x
-                self.y = y
 
-                if linear_x < 0:   # rückwärts
-                    self.steps -= 1
-                else:
-                    self.steps += 1
+            self.x = x
+            self.y = y
+
+            if linear_x < 0:   # rückwärts
+                self.steps -= 1
+            else:
+                self.steps += 1
     
             self.rect_robot.center = (self.x, self.y)
             self.rect_distance_front.center = self.rect_robot.center
@@ -270,6 +294,10 @@ class Robot:
             self.steps = 0
             self.rect_robot.center = (self.x, self.y)
 
+        if self.painting:
+            pygame.draw.line(self.layer_painting, (0, 255, 255), self.rect_robot_center_last, self.rect_robot.center, width=4)
+        self.rect_robot_center_last = self.rect_robot.center
+
         self.layer_robot.fill((255,255,255))
         self.layer_distance_front.fill((255,255,255))
         self.layer_distance_right.fill((255,255,255))
@@ -288,11 +316,12 @@ class Robot:
         self.layer_distance_right.blit(self.image_distance_right,self.rect_distance_right)
         self.layer_distance_back.blit(self.image_distance_back,self.rect_distance_back)
 
+        screen.blit(self.layer_painting, (0,0))
         screen.blit(self.layer_robot, (0, 0))
-        screen.blit(self.layer_distance_front, (0, 0))
-        screen.blit(self.layer_distance_right, (0, 0))
-        screen.blit(self.layer_distance_left, (0, 0))
-        screen.blit(self.layer_distance_back, (0, 0))
+        #screen.blit(self.layer_distance_front, (0, 0))
+        #screen.blit(self.layer_distance_right, (0, 0))
+        #screen.blit(self.layer_distance_left, (0, 0))
+        #screen.blit(self.layer_distance_back, (0, 0))
 
     def sensor_detection(self):
         self.mask_maze_surface = pygame.mask.from_surface(self.maze_surface)
@@ -309,7 +338,7 @@ class Robot:
 
         # get color from front
         try:
-            if self.distance_front < 30 and self.maze_surface.get_at(colpoint) is not None and self.maze_surface.get_at(colpoint) != (0,0,0,255):
+            if self.distance_front < 30 and self.maze_.get_at(colpoint) is not None and self.maze_surface.get_at(colpoint) != (0,0,0,255):
                 self.front_color_detect = (self.maze_surface.get_at(colpoint)[0], self.maze_surface.get_at(colpoint)[1], self.maze_surface.get_at(colpoint)[2])
             else:
                 self.front_color_detect = None
@@ -322,7 +351,7 @@ class Robot:
         x=int(self.rect_robot.center[0]+a)
         y=int(self.rect_robot.center[1]-b)
         try:
-            self.floor_color_detect = (self.maze_surface.get_at((x,y))[0], self.maze_surface.get_at((x,y))[1], self.maze_surface.get_at((x,y))[2])
+            self.floor_color_detect = (self.maze_coloredtiles.get_at((x,y))[0], self.maze_coloredtiles.get_at((x,y))[1], self.maze_coloredtiles.get_at((x,y))[2])
         except:
             self.floor_color_detect = None
 
@@ -368,31 +397,53 @@ class Robot:
         textrender = font.render(text, True, color)
         textsize = font.size(text)
         finalpos = (position[0]-textsize[0]/2, position[1])
-        self.maze_surface.blit(textrender, finalpos)
+        self.maze_coloredtiles.blit(textrender, finalpos)
 
 class Gametable():
     def __init__(self, WIDTH, HEIGHT):
         self.maze_surface = pygame.Surface((WIDTH, HEIGHT))
-    
-    def draw(self, maze_surface=None):
+        self.maze_coloredtiles = pygame.Surface((WIDTH, HEIGHT))
+        self.start_position = [0,0]
+
+    def validate_cellvalue(self, value, position):
+        value = str(value).lower()
+        if value == "sn" or value == "s":
+            self.start_position = position
+            self.start_direction = 0
+        if value == "so":
+            self.start_position = position
+            self.start_direction = 90
+        if value == "ss":
+            self.start_position = position
+            self.start_direction = 180
+        if value == "sw":
+            self.start_position = position
+            self.start_direction = 270
+
+    def draw(self):
         WHITE = (255, 255, 255)
 
         self.maze_surface.set_colorkey(WHITE)
         self.maze_surface.fill(WHITE)
+        self.maze_coloredtiles.set_colorkey(WHITE)
+        self.maze_coloredtiles.fill(WHITE)
 
         tile = Tile()
 
         for x in range(wx):
             for y in range(wy):
-                tile.draw(mymap.get_tile_info([x, y]), self.maze_surface, TILE_SIZE)
+                info = mymap.get_tile_info([x, y])
+                tile.draw(info, self.maze_surface, self.maze_coloredtiles, TILE_SIZE)
+                self.validate_cellvalue(info["value"], [x,y])
 
-        return self.maze_surface
+        return self.maze_surface, self.maze_coloredtiles
 
 
 mb = TelemetryBroker()
 
 vel_dict = {"vel_linear_x":0, 
-            "vel_angular_z":0}
+            "vel_angular_z":0,
+            "tool_pen":0}
 sensor_dict = {"sensor_angular_z":0, 
                "sensor_linear_x":0,
                "sensor_distance_front":1000,
@@ -423,10 +474,10 @@ pygame.display.set_caption("Node for simulation maze")
 
 # LOAD GAMETABLE
 mygametable = Gametable(WIDTH, HEIGHT)
-maze_surface = mygametable.draw()
+maze_surface, maze_coloredtiles = mygametable.draw()
 
 # LOAD ROBOT
-myrobot = Robot(0, 0, TILE_SIZE, maze_surface)
+myrobot = Robot(mygametable.start_position, mygametable.start_direction, TILE_SIZE, maze_surface, maze_coloredtiles)
 
 # RUNNING ENGINE
 linear_x=0
@@ -447,8 +498,9 @@ while running:
 
     # DRAW GAMETABLE NAD ROBOT
     screen.fill(WHITE)
+    screen.blit(maze_coloredtiles, (0, 0))
     screen.blit(maze_surface, (0, 0))
-    myrobot.move(screen, vel_dict["vel_linear_x"], vel_dict["vel_angular_z"])
+    myrobot.move(screen, vel_dict)
     #myrobot.move(screen, 100, 0)
     sensor_dict = myrobot.get_sensor_data(sensor_dict)
 
