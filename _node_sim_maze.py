@@ -508,6 +508,12 @@ while running:
     mb.setmulti(sensor_dict)
     pygame.display.flip()
 
-    time.sleep(0.1)
+    wait = 0.02
+    speed = abs(vel_dict["vel_linear_x"])
+    if speed > 0:
+        wait = 1/(speed/2)
+
+    time.sleep(wait)
+    
 pygame.quit()
 sys.exit()
