@@ -9,25 +9,26 @@ mb = TelemetryBroker()
 
 vel_dict = {"vel_linear_x":0, "vel_angular_z":0, "tool_pen":0, "led_blink":0}
 
+
+CURSOR_UP_LEFT = "\033[H"  # Springt nach ganz oben links (Home)
+HIDE_CURSOR = "\033[?25l"  # Versteckt den blinkenden Cursor (optional)
+SHOW_CURSOR = "\033[?25h"  # Zeigt ihn wieder an
+
+print(HIDE_CURSOR, end="") # Cursor verstecken für besseren Look
+
 while True:
     try:
-        #time.sleep(0.5)
+        #time.sleep(0.1)
         data = mb.getall()
+        output = ""
         os.system('cls' if os.name == 'nt' else 'clear')
         for key, value in sorted(data.items()):
-            print(f"{value:>5}", ":", key)
-        print()
-
-        # INPUT
-        for key, value in vel_dict.items():
-            invalue = input(str(key) + ":")
-            if invalue == "":
-                continue
-            vel_dict[key] = invalue
-
-        mb.setmulti(vel_dict)
+            output = output + f"{value:>5}"+" : "+key+"\n"
+        
+        print(f"{CURSOR_UP_LEFT}{output}", end="", flush=True)
 
     except KeyboardInterrupt:
+        print(SHOW_CURSOR)
         break
 
 mb.close()
