@@ -540,6 +540,8 @@ while running:
 
     wait = 0.02
     speed = abs(vel_dict["vel_linear_x"])
+    if speed == 0:
+        speed = abs(vel_dict["vel_angular_z"])
     if speed > 0:
         wait = 1/(speed/2)
 
