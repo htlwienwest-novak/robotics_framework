@@ -289,7 +289,13 @@ class Robot:
                 self.direction += 1
             else:
                 self.direction -= 1
-            
+
+            if self.direction == 360:
+                self.direction = 0
+            if self.direction == -1:
+                self.direction = 359
+
+
             self.image_robot = pygame.transform.rotate(self.image_robot_orig, -self.direction)
             self.image_distance_front = pygame.transform.rotate(self.image_distance_front_orig, -self.direction)
             self.image_distance_left = pygame.transform.rotate(self.image_distance_left_orig, -self.direction)
