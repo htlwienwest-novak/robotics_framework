@@ -1,3 +1,7 @@
+# TelemetryBroker for Inter Process Communication for Robtics
+# Node for Motor Control for 2 Motors left/right
+# Developed by Martin Novak at 2025/26
+
 import RPi.GPIO as GPIO
 from libs.lib_telemtrybroker import TelemetryBroker
 

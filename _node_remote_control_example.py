@@ -1,5 +1,5 @@
 # TelemetryBroker for Inter Process Communication for Robtics
-# Client for Receiver Nodes
+# ExampleNode: Client for Receiver Nodes
 # Developed by Martin Novak at 2025/26
 from libs.lib_telemtrybroker import TelemetryBroker
 import time

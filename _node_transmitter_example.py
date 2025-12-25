@@ -1,5 +1,5 @@
 # TelemetryBroker for Inter Process Communication for Robtics
-# Client for Transmitter Nodes
+# ExampleNode: Client for Transmitter Nodes
 # Developed by Martin Novak at 2025/26
 import random
 from libs.lib_telemtrybroker import TelemetryBroker
