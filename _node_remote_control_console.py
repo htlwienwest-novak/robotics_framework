@@ -7,7 +7,7 @@ import os
 
 mb = TelemetryBroker()
 
-vel_dict = {"vel_linear_x":0, "vel_angular_z":0, "tool_pen":0}
+vel_dict = {"vel_linear_x":0, "vel_angular_z":0, "tool_pen":0, "led_blink":0}
 
 while True:
     try:

@@ -54,7 +54,6 @@ class Map:
                 except (IndexError, TypeError):
                     pass
             elif color_obj.type == 'theme':
-                print(color_obj.theme)
                 THEME_COLORS = {
                 0: "FFFFFF", 1: "000000", 2: "E7E6E6", 3: "44546A",
                 4: "4472C4", 5: "ED7D31", 6: "A5A5A5", 7: "FFC000",
@@ -80,9 +79,7 @@ class Map:
         cell = self.__sheet[self.__convert_index_to_xls(coords)]
 
         value = cell.value
-        print(coords,cell.fill.start_color.type)
         color = self.__color_hex_to_dec(self.__validate_color(cell.fill.start_color))
-        print(coords,color)
 
         border_nord = self.__is_wall(cell.border.top.style)
         border_ost = self.__is_wall(cell.border.right.style)
@@ -116,7 +113,6 @@ class Tile:
         x = info["coords"][0]
         y = info["coords"][1]
         self.cellvalue = info["value"]
-        print(info)
 
         tile_rect = pygame.Rect(TILE_SIZE*x+2, TILE_SIZE*y+2, TILE_SIZE-4, TILE_SIZE-4)
         pygame.draw.rect(maze_coloredtiles, info["color"], tile_rect)
@@ -228,7 +224,12 @@ class Robot:
         self.maze_coloredtiles = surface_coloredtiles
         self.collision = False
         self.steps = 0
-        self.painting = True
+        self.painting = False
+        self.led_blink = False
+        self.starttime = time.time()
+        self.blink_interval = 0.5
+        self.blink_last_change = 0
+        self.led_status = False
 
 
     def get_sensor_data(self, sensor_dict):
@@ -249,6 +250,12 @@ class Robot:
         linear_x = int(vel_dict["vel_linear_x"])
         angular_z = int(vel_dict["vel_angular_z"])
         self.painting = bool(vel_dict["tool_pen"])
+        last_led_blink = self.led_blink
+        self.led_blink = bool(vel_dict["led_blink"])
+        if self.led_blink == True and last_led_blink == False:
+            self.starttime = time.time()
+        if self.led_blink == False:
+            last_led_blink = False
 
         if linear_x != 0 and angular_z == 0:
             # linear
@@ -298,11 +305,13 @@ class Robot:
             pygame.draw.line(self.layer_painting, (0, 255, 255), self.rect_robot_center_last, self.rect_robot.center, width=4)
         self.rect_robot_center_last = self.rect_robot.center
 
+
         self.layer_robot.fill((255,255,255))
         self.layer_distance_front.fill((255,255,255))
         self.layer_distance_right.fill((255,255,255))
         self.layer_distance_left.fill((255,255,255))
         self.layer_distance_back.fill((255,255,255))
+                
 
         self.rect_robot = self.image_robot.get_rect(center=self.rect_robot.center)
         self.rect_distance_front = self.image_distance_front.get_rect(center=self.rect_distance_front.center)
@@ -315,6 +324,18 @@ class Robot:
         self.layer_distance_left.blit(self.image_distance_left,self.rect_distance_left)
         self.layer_distance_right.blit(self.image_distance_right,self.rect_distance_right)
         self.layer_distance_back.blit(self.image_distance_back,self.rect_distance_back)
+
+        # LED BLINK SIGNAL
+        if time.time() < self.starttime + 7:
+            vel_dict["led_blink"] = 0
+            last_led_blink = False
+            mb.set("led_blink",0)
+            now = time.monotonic()
+            if now - self.blink_last_change > self.blink_interval:
+                self.blink_last_change = now
+                self.led_status = not self.led_status
+            if self.led_status:
+                pygame.draw.circle(self.layer_robot, (255, 255, 0), self.rect_robot.center, 8, width=0)
 
         screen.blit(self.layer_painting, (0,0))
         screen.blit(self.layer_robot, (0, 0))
@@ -443,7 +464,8 @@ mb = TelemetryBroker()
 
 vel_dict = {"vel_linear_x":0, 
             "vel_angular_z":0,
-            "tool_pen":0}
+            "tool_pen":0,
+            "led_blink":0}
 sensor_dict = {"sensor_angular_z":0, 
                "sensor_linear_x":0,
                "sensor_distance_front":1000,
@@ -506,6 +528,7 @@ while running:
 
     # GET SENSOR DATA
     mb.setmulti(sensor_dict)
+
     pygame.display.flip()
 
     wait = 0.02
@@ -514,6 +537,6 @@ while running:
         wait = 1/(speed/2)
 
     time.sleep(wait)
-    
+
 pygame.quit()
 sys.exit()
