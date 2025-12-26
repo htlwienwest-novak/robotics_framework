@@ -65,6 +65,7 @@ class Map:
                 return "FF000000"
         except:
             return "FFFFFFFF"
+        
 
     def get_dimension(self):
         val=""
@@ -82,14 +83,14 @@ class Map:
         value = cell.value
         color = self.__color_hex_to_dec(self.__validate_color(cell.fill.start_color))
 
-        border_nord = self.__is_wall(cell.border.top.style)
-        border_ost = self.__is_wall(cell.border.right.style)
-        border_sud = self.__is_wall(cell.border.bottom.style)
+        border_north = self.__is_wall(cell.border.top.style)
+        border_east = self.__is_wall(cell.border.right.style)
+        border_south = self.__is_wall(cell.border.bottom.style)
         border_west = self.__is_wall(cell.border.left.style)
 
-        border_nord_color = self.__color_hex_to_dec(self.__validate_color(cell.border.top.color))
-        border_ost_color = self.__color_hex_to_dec(self.__validate_color(cell.border.right.color))
-        border_sud_color = self.__color_hex_to_dec(self.__validate_color(cell.border.bottom.color))
+        border_north_color = self.__color_hex_to_dec(self.__validate_color(cell.border.top.color))
+        border_east_color = self.__color_hex_to_dec(self.__validate_color(cell.border.right.color))
+        border_south_color = self.__color_hex_to_dec(self.__validate_color(cell.border.bottom.color))
         border_west_color = self.__color_hex_to_dec(self.__validate_color(cell.border.left.color))
 
         return {
@@ -97,10 +98,10 @@ class Map:
             "value": value,
             "color": color,
             "walls": {
-                "ost": {"exists": border_ost, "color": border_ost_color},
+                "east": {"exists": border_east, "color": border_east_color},
                 "west": {"exists": border_west, "color": border_west_color},
-                "nord": {"exists": border_nord, "color": border_nord_color},
-                "sud": {"exists": border_sud, "color": border_sud_color},
+                "north": {"exists": border_north, "color": border_north_color},
+                "south": {"exists": border_south, "color": border_south_color},
             }
         }
     
@@ -109,28 +110,65 @@ class Map:
 class Tile:
     def __init__(self):
         self.cellvalue = ""
+    
+    def validate_cellvalue_victimcolor(self, value, direction):
+        value = str(value).lower()
+        if value[0:3] == "vcy" and value[3:4] == direction:
+            return (255,255,0)
+        if value[0:3] == "vcr" and value[3:4] == direction:
+            return (255,0,0)
+        if value[0:3] == "vcg" and value[3:4] == direction:
+            return (0,255,0)
+        if value[0:3] == "vlh" and value[3:4] == direction:
+            return (0,0,255)
+        if value[0:3] == "vls" and value[3:4] == direction:
+            return (0,255,255)
+        if value[0:3] == "vlu" and value[3:4] == direction:
+            return (255,0,255)
+        return (0,0,0)
+
+    def validate_cellvalue_victimletter(self, value, direction):
+        value = str(value).lower()
+        if value[0:3] == "vlh" and value[3:4] == direction:
+            return "H"
+        if value[0:3] == "vls" and value[3:4] == direction:
+            return "S"
+        if value[0:3] == "vlu" and value[3:4] == direction:
+            return "U"
+        return ""
+
+    def show_text(self, text, surface, position, size=20, color=(0,0,0)):
+        font = pygame.font.SysFont("couriernew", size)
+        textrender = font.render(text, True, color)
+        textsize = font.size(text)
+        finalpos = (position[0]-textsize[0]/2, position[1]-textsize[1]/2)
+        surface.blit(textrender, finalpos)
+
 
     def draw(self, info, maze_surface, maze_coloredtiles, TILE_SIZE=60):
         x = info["coords"][0]
         y = info["coords"][1]
         self.cellvalue = info["value"]
 
-        tile_rect = pygame.Rect(TILE_SIZE*x+2, TILE_SIZE*y+2, TILE_SIZE-4, TILE_SIZE-4)
+        tile_rect = pygame.Rect(TILE_SIZE*x, TILE_SIZE*y, TILE_SIZE, TILE_SIZE)
         pygame.draw.rect(maze_coloredtiles, info["color"], tile_rect)
        
-
         if info["walls"]["west"]["exists"]:
-            wall_west_rect = pygame.Rect(TILE_SIZE*x-2, TILE_SIZE*y-2, 4, TILE_SIZE+4)
-            pygame.draw.rect(maze_surface, info["walls"]["west"]["color"], wall_west_rect)
-        if info["walls"]["ost"]["exists"]:
-            wall_ost_rect = pygame.Rect(TILE_SIZE*x-2+TILE_SIZE, TILE_SIZE*y-2, 4, TILE_SIZE+4)
-            pygame.draw.rect(maze_surface, info["walls"]["ost"]["color"], wall_ost_rect)
-        if info["walls"]["nord"]["exists"]:
-            wall_nord_rect = pygame.Rect(TILE_SIZE*x-2, TILE_SIZE*y-2, TILE_SIZE+4, 4)
-            pygame.draw.rect(maze_surface, info["walls"]["nord"]["color"], wall_nord_rect)
-        if info["walls"]["sud"]["exists"]:
-            wall_sud_rect = pygame.Rect(TILE_SIZE*x-2, TILE_SIZE*y-2+TILE_SIZE, TILE_SIZE+4, 4)
-            pygame.draw.rect(maze_surface, info["walls"]["sud"]["color"], wall_sud_rect)
+            wall_west_rect = pygame.Rect(TILE_SIZE*x, TILE_SIZE*y, 3, TILE_SIZE)
+            pygame.draw.rect(maze_surface, self.validate_cellvalue_victimcolor(info["value"], "w"), wall_west_rect)
+            self.show_text(self.validate_cellvalue_victimletter(info["value"], "w"), maze_coloredtiles, (TILE_SIZE*x+10, TILE_SIZE*y+TILE_SIZE/2))
+        if info["walls"]["east"]["exists"]:
+            wall_east_rect = pygame.Rect(TILE_SIZE*x+TILE_SIZE-3, TILE_SIZE*y, 3, TILE_SIZE)
+            pygame.draw.rect(maze_surface, self.validate_cellvalue_victimcolor(info["value"], "e"), wall_east_rect)
+            self.show_text(self.validate_cellvalue_victimletter(info["value"], "e"), maze_coloredtiles, (TILE_SIZE*x+TILE_SIZE-10, TILE_SIZE*y+TILE_SIZE/2))
+        if info["walls"]["north"]["exists"]:
+            wall_north_rect = pygame.Rect(TILE_SIZE*x, TILE_SIZE*y, TILE_SIZE, 3)
+            pygame.draw.rect(maze_surface, self.validate_cellvalue_victimcolor(info["value"], "n"), wall_north_rect)
+            self.show_text(self.validate_cellvalue_victimletter(info["value"], "n"), maze_coloredtiles, (TILE_SIZE*x+TILE_SIZE/2, TILE_SIZE*y+10))
+        if info["walls"]["south"]["exists"]:
+            wall_south_rect = pygame.Rect(TILE_SIZE*x, TILE_SIZE*y+TILE_SIZE-3, TILE_SIZE, 3)
+            pygame.draw.rect(maze_surface, self.validate_cellvalue_victimcolor(info["value"], "s"), wall_south_rect)
+            self.show_text(self.validate_cellvalue_victimletter(info["value"], "s"), maze_coloredtiles, (TILE_SIZE*x+TILE_SIZE/2, TILE_SIZE*y+TILE_SIZE-10))
 
 
         return maze_surface, maze_coloredtiles
