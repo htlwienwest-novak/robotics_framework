@@ -102,7 +102,7 @@ while True:
 
         mb.setmulti(sensor_dict)
 
-        cv2.imshow('Camera', frame)
+        #cv2.imshow('Camera', frame)
 
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
