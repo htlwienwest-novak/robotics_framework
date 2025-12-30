@@ -273,7 +273,7 @@ class Robot:
 
     def get_sensor_data(self, sensor_dict):
         sensor_dict["sensor_angular_z"] = self.direction
-        sensor_dict["sensor_linear_x"] = int(self.steps/self.scale)
+        sensor_dict["sensor_linear_x"] = int(self.steps/3*2)
         self.sensor_detection()
         sensor_dict["sensor_distance_front"] = int(self.distance_front/self.scale)
         sensor_dict["sensor_distance_right"] = int(self.distance_right/self.scale)
