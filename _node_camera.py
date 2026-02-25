@@ -21,6 +21,9 @@ sensor_dict_orig = {"sensor_camera_color":"", "sensor_camera_letter":""}
 reader = easyocr.Reader(['en'], gpu=False) 
 
 cap = cv2.VideoCapture(0)
+# Auflösung auf 640x480 setzen
+cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
+cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
 
 # Grün (ca. 40-80)
 lower_green = np.array([40, 70, 70])
@@ -36,11 +39,20 @@ upper_red1 = np.array([10, 255, 255])
 lower_red2 = np.array([170, 120, 70])
 upper_red2 = np.array([180, 255, 255])
 
+framenr = 0
+
 while True:
     try:
+        framenr += 1
+        
+        if framenr==1000:
+            framenr=0
+        print("FrameNr:",framenr)
+        
         sensor_dict = sensor_dict_orig.copy()
 
         ret, frame = cap.read()
+        frame = cv2.resize(frame, (0, 0), fx=0.5, fy=0.5)
         if not ret:
             break
 
@@ -83,7 +95,7 @@ while True:
         
         # EASYOCR: LETTER DETECTION
         # detail=0 gibt nur den Text zurück, ohne Koordinaten
-        results = reader.readtext(frame)
+        results = reader.readtext(frame, allowlist='HSU')
 
         for (bbox, text, prob) in results:
             if prob > 0.7:
@@ -99,10 +111,11 @@ while True:
                 if text.lower()=="h" or text.lower()=="s" or text.lower()=="u":
                     print("Victim Letter recognized:", text.lower())
                     sensor_dict["sensor_camera_letter"] = text.lower()
+                    break
 
         mb.setmulti(sensor_dict)
 
-        #cv2.imshow('Camera', frame)
+        cv2.imshow('Camera', frame)
 
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
