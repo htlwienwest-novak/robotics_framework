@@ -4,6 +4,16 @@
 # Developed by Martin Novak at 2025/26
 # Installation on raspberry pi:
 #    sudo apt-get install python3-spidev
+#    pip install pmw3901 spidev
+
+
+
+
+
+
+
+
+"""
 import math
 from libs.lib_telemtrybroker import TelemetryBroker
 import time
@@ -53,3 +63,4 @@ try:
 except KeyboardInterrupt:
     print("\nProgramm beendet.")
     optik_sensor.spi.close()
+"""
