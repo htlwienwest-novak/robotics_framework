@@ -107,7 +107,17 @@ class TelemetryBroker:
         if self.get_node_permission() < 1:
             return None
         all_keys = []
-        for key in self.__r.scan_iter(match="*", count=20):
+        for key in self.__r.scan_iter(match="*"):
+            all_keys.append(key)
+            
+        return self.getmulti(all_keys)
+
+    # Get all key-value pairs that starts with
+    def getallWith(self, text):
+        if self.get_node_permission() < 1:
+            return None
+        all_keys = []
+        for key in self.__r.scan_iter(match=text):
             all_keys.append(key)
             
         return self.getmulti(all_keys)
