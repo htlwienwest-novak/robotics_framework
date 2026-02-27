@@ -6,6 +6,49 @@
 #   pip install adafruit-blinka
 #   pip install adafruit-circuitpython-vl53l4cd
 from libs.lib_telemtrybroker import TelemetryBroker
+
+import time
+import board
+import busio
+import adafruit_vl53l4cd
+
+
+mb = TelemetryBroker()
+
+data_dict = {"sensor_distance_front":0, "sensor_distance_right":0, "sensor_distance_back":0, "sensor_distance_left":0}
+
+# I2C Bus initialisieren
+i2c = busio.I2C(board.SCL, board.SDA)
+
+# Sensor-Objekt erstellen
+vl53 = adafruit_vl53l4cd.VL53L4CD(i2c)
+
+# Optional: Timing Budget anpassen (Standard ist 50ms)
+# Höheres Budget = präzisere Messung, aber langsamer
+vl53.inter_measurement = 0
+vl53.timing_budget = 50
+
+print("VL53L4CD Messung gestartet...")
+vl53.start_ranging()
+
+try:
+    while True:
+        if vl53.data_ready:
+            # Messung löschen für den nächsten Durchgang
+            vl53.clear_interrupt()
+            
+            # Distanz in cm umrechnen (Sensor gibt mm aus)
+            distance = int(vl53.distance * 10)
+            data_dict["sensor_distance_front"] = distance
+            mb.setmulti(data_dict)
+            #print(f"Abstand: {distance} mm")
+            
+        time.sleep(0.1)
+
+except KeyboardInterrupt:
+    print("\nMessung beendet.")
+
+"""
 import time
 import board
 import busio
@@ -96,3 +139,5 @@ except KeyboardInterrupt:
     print("\nStoppe Messungen...")
     for sensor in sensors:
         sensor.stop_ranging()
+
+"""

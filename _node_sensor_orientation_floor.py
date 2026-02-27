@@ -4,6 +4,53 @@
 # Developed by Martin Novak at 2025/26
 # Installation on raspberry pi:
 #    sudo apt-get install python3-spidev
+#    pip install pmw3901 spidev
+
+import math
+from libs.lib_telemtrybroker import TelemetryBroker
+import argparse
+import time
+
+from pmw3901 import PMW3901
+
+print("Press Ctrl+C to exit!")
+
+ROTATION_RADIUS = 100  # Radius für Rotationsbewegungen in mm
+
+mb = TelemetryBroker()
+data_dict = {"sensor_angular_abs_z":0, "sensor_linear_abs_x":0, "sensor_linear_abs_y":0}
+
+flo = PMW3901(spi_cs_gpio=0)
+flo.set_rotation(0)
+
+tx = 0
+ty = 0
+
+try:
+    while True:
+        try:
+            x, y = flo.get_motion()
+        except RuntimeError:
+            continue
+        tx += x
+        ty += y
+
+        angular_z = int((ty*180)/(math.pi*ROTATION_RADIUS))  # Vereinfachte Annahme für Rotation
+        data_dict["sensor_linear_abs_x"] = tx
+        data_dict["sensor_linear_abs_y"] = ty
+        data_dict["sensor_angular_abs_z"] = angular_z
+        print(data_dict)
+        mb.setmulti(data_dict)
+
+        #print(f"Relative: x {x:03d} y {y:03d} | Absolute: x {tx:03d} y {ty:03d}")
+        time.sleep(0.01)
+except KeyboardInterrupt:
+    mb.close()
+
+
+
+
+"""
 import math
 from libs.lib_telemtrybroker import TelemetryBroker
 import time
@@ -53,3 +100,4 @@ try:
 except KeyboardInterrupt:
     print("\nProgramm beendet.")
     optik_sensor.spi.close()
+"""

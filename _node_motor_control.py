@@ -2,42 +2,29 @@
 # Node for Motor Control for 2 Motors left/right
 # Developed by Martin Novak at 2025/26
 
-import RPi.GPIO as GPIO
+from gpiozero import Motor
 from libs.lib_telemtrybroker import TelemetryBroker
 
-class Motor:
+class DCMotor:
     def __init__(self, pwmpin1, pwmpin2, direction=True):
-        GPIO.setmode(GPIO.BCM)  # Wir nutzen die GPIO-Nummern (nicht die Pin-Nummern)
-        GPIO.setup(pwmpin1, GPIO.OUT)
-        GPIO.setup(pwmpin2, GPIO.OUT)
-        pwm_objekt = GPIO.PWM(18, 1000)
-        self.pwmpin1 = GPIO.PWM(pwmpin1, 1000)
-        self.pwmpin2 = GPIO.PWM(pwmpin2, 1000)
-        self.pwmpin1.start(0)
-        self.pwmpin2.start(0)
+        self.motor = Motor(pwmpin1, pwmpin2)    #, enable=22)
+        self.motor.stop()
         self.direction = direction
 
     def drive(self, value):
         #Setze RIchtung -100 bis 100
-        self.pwmpin1.start(0)
-        self.pwmpin2.start(0)
-
-        if not self.direction:
-            value = -value
+        speed = abs(value/100)
 
         if value==0:
-            self.pwmpin1.ChangeDutyCycle(0)
-            self.pwmpin2.ChangeDutyCycle(0)
-        elif value>=0:
-            self.pwmpin1.ChangeDutyCycle(int(abs(value)))
-            self.pwmpin2.ChangeDutyCycle(0)
+            self.motor.stop()
+        elif value>0:
+            self.motor.forward(speed)
         else:
-            self.pwmpin1.ChangeDutyCycle(0)
-            self.pwmpin2.ChangeDutyCycle(int(abs(value)))
+            self.motor.backward(speed)
         
 mb = TelemetryBroker()
-m1 = Motor(12, 13) 
-m2 = Motor(19, 26)
+m1 = DCMotor(12, 13) 
+m2 = DCMotor(19, 26)
 
 vel_dict = {"vel_linear_x":0, "vel_angular_z":0}
 
@@ -64,7 +51,9 @@ while True:
             m2.drive(0)
 
     except KeyboardInterrupt:
+        m1.drive(0)
+        m2.drive(0)
         break
 
 mb.close()
-GPIO.cleanup()
+

@@ -8,31 +8,35 @@ import sys
 
 mb = TelemetryBroker()
 
-data_dict = {"vel_linear_x":0, "vel_angular_z":0, "tool_pen":0, "led_blink":0}
+data_dict = {"vel_linear_x":0, "vel_linear_y":0, "vel_angular_z":0, "tool_pen":0, "led_blink":0}
 
 # Initialisierung
 pygame.init()
 pygame.joystick.init()
 
-# Überprüfen, ob Controller vorhanden sind
-joystick_count = pygame.joystick.get_count()
 
-if joystick_count == 0:
-    print("Kein Controller gefunden.")
-    sys.exit()
-else:
-    # Den ersten Controller auswählen (Index 0)
-    joystick = pygame.joystick.Joystick(0)
-    joystick.init()
-    print(f"Controller erkannt: {joystick.get_name()}")
-    print(f"Anzahl Achsen: {joystick.get_numaxes()}")
-    print(f"Anzahl Buttons: {joystick.get_numbuttons()}")
-
-print("-" * 20)
-print("Drücke Tasten auf dem Controller (STRG+C zum Beenden)...")
-
-# Hauptschleife
 try:
+    while True:
+        # Überprüfen, ob Controller vorhanden sind
+        joystick_count = pygame.joystick.get_count()
+
+        if joystick_count == 0:
+            print("Kein Controller gefunden.")
+            sys.exit()
+        else:
+            # Den ersten Controller auswählen (Index 0)
+            joystick = pygame.joystick.Joystick(0)
+            joystick.init()
+            print(f"Controller erkannt: {joystick.get_name()}")
+            print(f"Anzahl Achsen: {joystick.get_numaxes()}")
+            print(f"Anzahl Buttons: {joystick.get_numbuttons()}")
+            break
+
+    print("-" * 20)
+    print("Drücke Tasten auf dem Controller (STRG+C zum Beenden)...")
+
+    # Hauptschleife
+
     while True:
         # Event-Handling
         for event in pygame.event.get():
@@ -50,13 +54,13 @@ try:
                 elif event.button == 1: # Circle-Button
                     print("Circle-Button gedrückt")      
                     data_dict["led_blink"] = 1
-                elif event.button == 2: # Square-Button
+                elif event.button == 3: # Square-Button
                     print("Square-Button gedrückt")
-                elif event.button == 3: # Triangle-Button
+                elif event.button == 2: # Triangle-Button
                     print("Triangle-Button gedrückt")
-                elif event.button == 4: # Share-Button
+                elif event.button == 9: # Share-Button
                     print("Share-Button gedrückt")
-                elif event.button == 5: # Start-Button
+                elif event.button == 10: # Start-Button
                     print("Start-Button gedrückt")
                 elif event.button == 6: # Options-Button
                     print("Options-Button gedrückt")
@@ -64,9 +68,9 @@ try:
                     print("LeftStick-Button gedrückt")
                 elif event.button == 8: # RightStick-Button
                     print("RightStick-Button gedrückt")
-                elif event.button == 9: # L1-Button
+                elif event.button == 4: # L1-Button
                     print("L1-Button gedrückt")
-                elif event.button == 10: # R1-Button
+                elif event.button == 5: # R1-Button
                     print("R1-Button gedrückt")
                 elif event.button == 11: # Cross-Top-Button
                     print("Cross-Top-Button gedrückt")
@@ -94,18 +98,26 @@ try:
                         data_dict["vel_angular_z"] = val
                     elif event.axis == 1:
                         print("Left-Stick-Y bewegt:", int(event.value*100))
-                    elif event.axis == 2:
-                        print("Right-Stick-X bewegt:", int(event.value*100))
                     elif event.axis == 3:
-                        print("Right-Stick-Y bewegt:", int(event.value*100))
+                        val = int(event.value*10)*10
+                        if (val<20 and val>0) or (val>-20 and val<0):
+                            val=0
+                        print("Right-Stick-X bewegt:", val)
+                        data_dict["vel_linear_y"] = val                        
                     elif event.axis == 4:
+                        val = int(event.value*10)*10*-1
+                        if (val<20 and val>0) or (val>-20 and val<0):
+                            val=0
+                        print("Right-Stick-Y bewegt:", val)
+                        data_dict["vel_linear_x"] = val   
+                    elif event.axis == 2:
                         val = -1*int((event.value*100+100)/2)
                         print("L2-Trigger bewegt:", val)
-                        data_dict["vel_linear_x"] = val
+                        #data_dict["vel_linear_x"] = val
                     elif event.axis == 5:
                         val = int((event.value*100+100)/2)
                         print("R2-Trigger bewegt:", val)
-                        data_dict["vel_linear_x"] = val
+                        #data_dict["vel_linear_x"] = val
             
             # D-Pad (Steuerkreuz)
             elif event.type == pygame.JOYHATMOTION:

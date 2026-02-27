@@ -1,13 +1,3 @@
-# TelemetryBroker for Inter Process Communication for Robtics
-# node for BNO08x orientation and psoition sensor
-# sensor system with 3 sensors: Accelerometer, Gyroscope, Magnetometer
-# Developed by Martin Novak at 2025/26
-# Installation on raspberry pi:
-#   pip install adafruit-blinka
-#   pip install adafruit-circuitpython-bno08x
-
-
-from libs.lib_telemtrybroker import TelemetryBroker
 import time
 import board
 import math
@@ -21,11 +11,6 @@ bno = BNO08X_I2C(i2c, address=0x4b)
 # Rotation Vector aktivieren (Fusion aus Accel, Gyro, Mag)
 bno.enable_feature(BNO_REPORT_ROTATION_VECTOR)
 bno.enable_feature(BNO_REPORT_LINEAR_ACCELERATION)
-
-mb = TelemetryBroker()
-
-data_dict = {"sensor_angular_abs_z":0, "sensor_angular_abs_y":0, "sensor_angular_abs_x":0, 
-               "sensor_linear_rel_x":0, "sensor_linear_rel_y":0, "sensor_linear_rel_z":0}
 
 def quaternion_to_euler(quat):
     """
@@ -74,16 +59,7 @@ try:
             #print(f"LINEAR -> X: {lin_x:6.2f} Y: {lin_y:6.2f} Z: {lin_z:6.2f}")
             #print(f"X (Roll): {r:7.2f}° | Y (Pitch): {p:7.2f}° | Z (Yaw): {y:7.2f}°")
             
-            data_dict["sensor_angular_abs_x"] = int(r)
-            data_dict["sensor_angular_abs_y"] = int(p)
-            data_dict["sensor_angular_abs_z"] = int(y)
-            data_dict["sensor_linear_rel_x"] = round(lin_x,2)
-            data_dict["sensor_linear_rel_y"] = round(lin_y,2)
-            data_dict["sensor_linear_rel_z"] = round(lin_z,2)
-
-            mb.setmulti(data_dict)
         time.sleep(0.05) # 20Hz Update-Rate
 
 except KeyboardInterrupt:
     print("\nMessung beendet.")
-    mb.close()

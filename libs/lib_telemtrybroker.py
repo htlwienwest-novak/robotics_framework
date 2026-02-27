@@ -74,7 +74,8 @@ class TelemetryBroker:
     def get(self, name):
         if self.get_node_permission() < 1:
             return None
-        return self.type_validator(self.__r.get(name))
+        #return self.type_validator(self.__r.get(name))
+        return self.__r.get(name)
 
     # Set multi key-value paris to cache
     #   dict    - dictionary
@@ -83,9 +84,11 @@ class TelemetryBroker:
             return None
         if len(dict) == 0:
             return
+        
         for k,v in dict.items():
             if isinstance(v, bool):
                 dict[k] = int(v)
+
         self.__r.mset(dict)
 
     # Get multi key-value pairs from the cache
@@ -95,7 +98,8 @@ class TelemetryBroker:
             return None
         rec_list = self.__r.mget(keys)
         for c in range(len(rec_list)):
-            rec_list[c] = self.type_validator(rec_list[c])
+            #rec_list[c] = self.type_validator(rec_list[c])
+            rec_list[c] = rec_list[c]
         return dict(zip(keys, rec_list))
     
     # Get all key-value pairs from redis db
@@ -103,7 +107,17 @@ class TelemetryBroker:
         if self.get_node_permission() < 1:
             return None
         all_keys = []
-        for key in self.__r.scan_iter(match="*", count=20):
+        for key in self.__r.scan_iter(match="*"):
+            all_keys.append(key)
+            
+        return self.getmulti(all_keys)
+
+    # Get all key-value pairs that starts with
+    def getallWith(self, text):
+        if self.get_node_permission() < 1:
+            return None
+        all_keys = []
+        for key in self.__r.scan_iter(match=text):
             all_keys.append(key)
             
         return self.getmulti(all_keys)
