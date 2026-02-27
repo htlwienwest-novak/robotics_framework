@@ -7,7 +7,7 @@ import os
 
 mb = TelemetryBroker()
 
-vel_dict = {"vel_linear_x":0, "vel_angular_z":0, "tool_pen":0, "led_blink":0}
+data_dict = {}
 
 while True:
     try:
@@ -19,13 +19,14 @@ while True:
         print()
 
         # INPUT
-        for key, value in vel_dict.items():
-            invalue = input(str(key) + ":")
-            if invalue == "":
-                continue
-            vel_dict[key] = invalue
+        input_key = input("key:")
+        input_val = input("val:")
 
-        mb.setmulti(vel_dict)
+        if input_key == "" or input_val == "":
+            continue
+
+        data_dict[input_key] = input_val
+        mb.setmulti(data_dict)
 
     except KeyboardInterrupt:
         break
