@@ -15,7 +15,7 @@ while True:
         data = mb.getall()
         os.system('cls' if os.name == 'nt' else 'clear')
         for key, value in sorted(data.items()):
-            print(f"{value:>5}", ":", key)
+            print(f"{key}"+" : "+value+"\n")
         print()
 
         # INPUT
