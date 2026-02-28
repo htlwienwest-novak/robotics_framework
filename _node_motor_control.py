@@ -30,23 +30,37 @@ vel_dict = {"vel_linear_x":0, "vel_angular_z":0}
 
 while True:
     try:
-        print(vel_dict)
+        #print(vel_dict)
         vel_dict = mb.getmulti(vel_dict.keys())
 
-        if vel_dict["vel_linear_x"] != 0 and vel_dict["vel_angular_z"] == 0:
-            m1.drive(vel_dict["vel_linear_x"])
-            m2.drive(vel_dict["vel_linear_x"])
-        elif vel_dict["vel_linear_x"] == 0 and vel_dict["vel_angular_z"] != 0:
-            if vel_dict["vel_angular_z"] > 0:
-                m1.drive(vel_dict["vel_angular_z"])
-                m2.drive(-vel_dict["vel_angular_z"])
-            elif vel_dict["vel_angular_z"] < 0:
-                m1.drive(-vel_dict["vel_angular_z"])
-                m2.drive(vel_dict["vel_angular_z"])
-            else:
-                m1.drive(0)
-                m2.drive(0)
+        if vel_dict is None:
+            continue
+        if vel_dict["vel_linear_x"] is None or vel_dict["vel_angular_z"] is None:
+            continue
+
+        vel_linear_x = int(vel_dict["vel_linear_x"])
+        vel_angular_z = int(vel_dict["vel_angular_z"])
+
+        # Vorwärts:
+        if vel_linear_x != 0 and vel_angular_z == 0:
+            print("vorwärts/rückwärts")
+            m1.drive(vel_linear_x)
+            m2.drive(vel_linear_x)
+
+        # Drehung:
+        elif vel_linear_x == 0 and vel_angular_z != 0:
+            print("drehen")
+            m1.drive(vel_angular_z)
+            m2.drive(-vel_angular_z)
+
+        # Kurvenfahrt:
+        elif vel_linear_x != 0 and vel_angular_z != 0:
+            print("kurve")
+            pass
+
+        # STOP:
         else:
+            print("stop")
             m1.drive(0)
             m2.drive(0)
 
