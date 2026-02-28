@@ -1,6 +1,5 @@
 # TelemetryBroker for Inter Process Communication for Robtics
-# node for BNO055 orientation and psoition sensor
-# sensor system with 3 sensors: Accelerometer, Gyroscope, Magnetometer
+# node for PMW3901 orientation on floor
 # Developed by Martin Novak at 2025/26
 # Installation on raspberry pi:
 #    sudo apt-get install python3-spidev
@@ -18,7 +17,7 @@ print("Press Ctrl+C to exit!")
 ROTATION_RADIUS = 100  # Radius für Rotationsbewegungen in mm
 
 mb = TelemetryBroker()
-data_dict = {"sensor_angular_abs_z":0, "sensor_linear_abs_x":0, "sensor_linear_abs_y":0}
+data_dict = {"sensor_linear_abs_x":0, "sensor_linear_abs_y":0}
 
 flo = PMW3901(spi_cs_gpio=0)
 flo.set_rotation(0)
@@ -35,10 +34,10 @@ try:
         tx += x
         ty += y
 
-        angular_z = int((ty*180)/(math.pi*ROTATION_RADIUS))  # Vereinfachte Annahme für Rotation
+        #angular_z = int((ty*180)/(math.pi*ROTATION_RADIUS))  # Vereinfachte Annahme für Rotation
         data_dict["sensor_linear_abs_x"] = tx
         data_dict["sensor_linear_abs_y"] = ty
-        data_dict["sensor_angular_abs_z"] = angular_z
+        #data_dict["sensor_angular_abs_z"] = angular_z
         print(data_dict)
         mb.setmulti(data_dict)
 
