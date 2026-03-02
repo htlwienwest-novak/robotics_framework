@@ -7,6 +7,19 @@ sudo apt install redis-server
 sudo systemctl start redis
 sudo systemctl enable redis
 ```
+Redis is used only for communication (ipc) between nodes and not for storing data.
+Disable persisence of redis db.
+It protects the hard drive or SD card from damage.
+
+Change redis config to disable writing on hd or sd:
+```
+sudo nano /etc/redis/redis.conf
+```
+change or append the following settings in redis.conf:
+```
+save ""
+appendonly no
+```
 ## 2. Install redis client libraries for python:
 ```
 pip install redis
