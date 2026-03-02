@@ -20,6 +20,10 @@ change or append the following settings in redis.conf:
 save ""
 appendonly no
 ```
+Restart redis:
+```
+sudo systemctl restart redis
+```
 ## 2. Install redis client libraries for python:
 ```
 pip install redis
