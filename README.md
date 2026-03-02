@@ -7,6 +7,23 @@ sudo apt install redis-server
 sudo systemctl start redis
 sudo systemctl enable redis
 ```
+Redis is used only for communication (ipc) between nodes and not for storing data.
+Disable persisence of redis db.
+It protects the hard drive or SD card from damage.
+
+Change redis config to disable writing on hd or sd:
+```
+sudo nano /etc/redis/redis.conf
+```
+change or append the following settings in redis.conf:
+```
+save ""
+appendonly no
+```
+Restart redis:
+```
+sudo systemctl restart redis
+```
 ## 2. Install redis client libraries for python:
 ```
 pip install redis
@@ -28,7 +45,7 @@ Terminal=true
 - starter.py
    Starts all enabled nodes:
       Enabled nodes are nodes that begin with node_*
-      All nodes with a different starting name, e.g., _node_*, are disabled.
+      All nodes with a different starting name, e.g., __node_*, are disabled.
 - disable_all_nodes.py
    Disabled all nodes with renaming to _node_*
 - stop.py
@@ -37,8 +54,9 @@ Terminal=true
 # Node Description:
 All nodes are optimized for Raspberry Pi 5
 
-# mode_master
-The Brain. Master-Node for controlling system for autonomous driving
+# node_master
+The Brain. Master-Node for controlling system for autonomous driving.
+includes the state machine for controlling the robot.
 ## requirements
 ```
 Nothing
@@ -56,7 +74,7 @@ pip install opencv-python
 - sensor_camera_color => (R, G, B)
 - sensor_camera_letter => H, S, U
 
-# mode_camera_without_ocr
+# node_camera_without_ocr
 Node for camera sensor for recognition colors and letters H, S, U with image-mapping
 ## requirements
 ```
@@ -67,7 +85,7 @@ pip install opencv-python
 - sensor_camera_color => (0, 0, 0) to (255,255,255)
 - sensor_camera_letter => H, S, U
 
-# mode_motor_control_mecanum
+# node_motor_control_mecanum
 Node for Motor Control for 4 Motors with Mecanum Wheels
 ## requirements
 ```
@@ -78,7 +96,7 @@ pip install gpiozero
 - vel_linear_y => -100 to 100
 - vel_angular_z => -100 to 100
 
-# mode_motor_control
+# node_motor_control
 Node for Motor Control for 2 Motors (left and right)
 ## requirements
 ```
@@ -88,7 +106,7 @@ pip install gpiozero
 - vel_linear_x => -100 to 100
 - vel_angular_z => -100 to 100
 
-# mode_remote_control_ps4
+# node_remote_control_ps4
 node for ps4 remote controller via bluetooth
 ## requirements
 ```
@@ -101,7 +119,7 @@ pip install pygame
 - tool_pen => 0 or 1
 - led_blink => 0 or 1
 
-# mode_remote_control_terminal
+# node_remote_control_terminal
 node for remote control via terminal
 ## requirements
 ```
@@ -110,7 +128,7 @@ nothing
 ## used keys
 all keys
 
-# mode_remote_display_terminal
+# node_remote_display_terminal
 node for displaying all keys in redis db
 ## requirements
 ```
@@ -119,7 +137,7 @@ nothing
 ## used keys
 all keys
 
-# mode_sensor_color_floor
+# node_sensor_color_floor
 node for GY-33 TCS34725 color detecter sensor via i2c
 ## requirements
 ```
@@ -131,7 +149,7 @@ pip install adafruit-circuitpython-tcs34725
 - sensor_color_floor_lux
 - sensor_color_floor_temp
 
-# mode_sensor_distance
+# node_sensor_distance
 node for VL53L4CD lidar distance sensors ia i2c
 ## requirements
 ```
@@ -144,7 +162,7 @@ pip install adafruit-circuitpython-vl53l4cd
 - sensor_distance_back => distance in mm
 - sensor_distance_left => distance in mm
 
-# mode_sensor_distance_360
+# node_sensor_distance_360
 node for Slamtec RPLidar C1 360 distance sensors via USB
 ## requirements
 ```
@@ -153,7 +171,7 @@ nothing
 ## used keys
 - sensor_distance_360 => JSON => degree:distance => e.g. {0:20, 1:34, 3:12, .....}
 
-# mode_sensor_orientation_floor
+# node_sensor_orientation_floor
 node for PMW3901 orientation flow sensor via spi
 ## requirements
 ```
@@ -163,7 +181,7 @@ pip install pmw3901 spidev
 - sensor_linear_abs_x => absolute distance
 - sensor_linear_abs_y => absolute distance
 
-# mode_sensor_orientation
+# node_sensor_orientation
 node for BNO08x orientation and psoition sensor via i2c
 ## requirements
 ```
@@ -178,7 +196,7 @@ pip install adafruit-circuitpython-bno08x
 - sensor_linear_rel_y => relative distance
 - sensor_linear_rel_z => relative distance
 
-# mode_servo_control_16x
+# node_servo_control_16x
 Node for Servo Control via 16 channel PWM Driver i2c
 ## requirements
 ```
@@ -187,7 +205,7 @@ pip install adafruit-circuitpython-servokit
 ## used keys
 - servo_0 to servo_15 => 0 to 180
 
-# mode_sim_maze
+# node_sim_maze
 node for simulation of maze gametable
 Creating maps with file maps.xlsx.
 Use MS Excel as editor
