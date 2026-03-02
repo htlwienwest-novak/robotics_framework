@@ -288,6 +288,7 @@ class Robot:
 
         linear_x = int(vel_dict["vel_linear_x"])
         angular_z = int(vel_dict["vel_angular_z"])
+        linear_y = int(vel_dict["vel_linear_y"])
         self.painting = bool(vel_dict["tool_pen"])
         last_led_blink = self.led_blink
         self.led_blink = bool(vel_dict["led_blink"])
@@ -296,14 +297,22 @@ class Robot:
         if self.led_blink == False:
             last_led_blink = False
 
-        if linear_x != 0 and angular_z == 0:
+        if (linear_x != 0 or linear_y != 0) and angular_z == 0:
             # linear
             if linear_x < 0:   # rückwärts
                 self.direction = self.direction+180
+            if linear_y > 0:   # seitwärts rechts
+                self.direction = self.direction+90
+            if linear_y < 0:   # seitwärts links
+                self.direction = self.direction-90                
             a=2*math.sin(math.radians(self.direction))
             b=2*math.cos(math.radians(self.direction))
             if linear_x < 0:   # rückwärts
                 self.direction = self.direction-180
+            if linear_y > 0:   # seitwärts rechts
+                self.direction = self.direction-90
+            if linear_y < 0:   # seitwärts links
+                self.direction = self.direction+90                
             x=self.rect_robot.center[0]+a
             y=self.rect_robot.center[1]-b
 
@@ -311,7 +320,7 @@ class Robot:
             self.x = x
             self.y = y
 
-            if linear_x < 0:   # rückwärts
+            if linear_x < 0 or linear_y < 0:   # rückwärts
                 self.steps -= 1
             else:
                 self.steps += 1
@@ -322,7 +331,7 @@ class Robot:
             self.rect_distance_right.center = self.rect_robot.center
             self.rect_distance_back.center = self.rect_robot.center
             
-        elif linear_x == 0 and angular_z != 0:
+        elif linear_x == 0 and angular_z != 0 and linear_y == 0:
             # angular
             if angular_z > 0:
                 self.direction += 1
@@ -508,6 +517,7 @@ class Gametable():
 mb = TelemetryBroker()
 
 vel_dict = {"vel_linear_x":0, 
+            "vel_linear_y":0,
             "vel_angular_z":0,
             "tool_pen":0,
             "led_blink":0}
