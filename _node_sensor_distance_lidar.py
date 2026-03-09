@@ -10,38 +10,73 @@ from libs.lib_telemtrybroker import TelemetryBroker
 import time
 import board
 import busio
-import adafruit_vl53l4cd
+from adafruit_vl53l4cd import VL53L4CD
+from gpiozero import LED
 
 
 mb = TelemetryBroker()
 
 data_dict = {"sensor_distance_front":0, "sensor_distance_right":0, "sensor_distance_back":0, "sensor_distance_left":0}
+xshut_pins = [4, 17, 27, 22]  # Wir nutzen hier GPIO 4, 17, 27, 22
+sensor_list = []
+base_address = 0x30  # Startadresse für die Sensoren (0x30, 0x31, 0x32, 0x33)
 
 # I2C Bus initialisieren
 i2c = busio.I2C(board.SCL, board.SDA)
 
-# Sensor-Objekt erstellen
-vl53 = adafruit_vl53l4cd.VL53L4CD(i2c)
+# Addressierung aller Sensoren über XSHUT Pins (Reset)
+# Alle Sensoren ausschalten:
+for pin in xshut_pins:
+    xshut = LED(pin)
+    xshut.off()  # Sensor ausschalten (Low)
+    
+time.sleep(0.1)  # Kurz warten, bis Sensor gebootet hat
 
-# Optional: Timing Budget anpassen (Standard ist 50ms)
-# Höheres Budget = präzisere Messung, aber langsamer
-vl53.inter_measurement = 0
-vl53.timing_budget = 50
+# Alle Sensoren nacheinander einschalten und neue Adresse vergeben
+for i, pin in enumerate(xshut_pins):
+    # a) Sensor einschalten
+    xshut = LED(pin)
+    xshut.on()  # Sensor einschalten (High) 
+    time.sleep(0.1) # Kurz warten, bis Sensor gebootet hat
+    
+    # b) Sensor auf Standard-Adresse 0x29 initialisieren
+    sensor = VL53L4CD(i2c)
+    
+    # c) Adresse ändern! (WICHTIG)
+    new_address = base_address + i
+    sensor.set_address(new_address)
+    
+    # d) Sensor konfigurieren und zur Liste hinzufügen
+    sensor.inter_measurement = 0
+    sensor.timing_budget = 50
+    sensor.start_ranging()
+    sensor_list.append(sensor)
+
 
 print("VL53L4CD Messung gestartet...")
-vl53.start_ranging()
+
 
 try:
     while True:
-        if vl53.data_ready:
-            # Messung löschen für den nächsten Durchgang
-            vl53.clear_interrupt()
-            
-            # Distanz in cm umrechnen (Sensor gibt mm aus)
-            distance = int(vl53.distance * 10)
-            data_dict["sensor_distance_front"] = distance
+        for i, vl53 in enumerate(sensor_list):
+            if vl53.data_ready:
+                # Messung löschen für den nächsten Durchgang
+                vl53.clear_interrupt()
+                
+                # Distanz in cm umrechnen (Sensor gibt mm aus)
+                distance = int(vl53.distance * 10)
+
+                if i == 0:  # front
+                    data_dict["sensor_distance_front"] = distance
+                elif i == 1:  # right
+                    data_dict["sensor_distance_right"] = distance
+                elif i == 2:  # back
+                    data_dict["sensor_distance_back"] = distance
+                elif i == 3:  # left
+                    data_dict["sensor_distance_left"] = distance    
+
             mb.setmulti(data_dict)
-            #print(f"Abstand: {distance} mm")
+            #print(data_dict)
             
         time.sleep(0.1)
 
