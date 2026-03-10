@@ -6,10 +6,11 @@
 from libs.lib_telemtrybroker import TelemetryBroker
 import smbus2
 import time
+import json
 
 mb = TelemetryBroker()
 
-data_dict = {"sensor_color_floor":(0,0,0), "sensor_color_floor_lux":0, "sensor_color_floor_temp":0}
+data_dict = {"sensor_floor_color":"(0,0,0)", "sensor_floor_color_lux":0, "sensor_floor_color_text":""}
 
 # I2C-Adresse des GY-33
 GY33_ADDRESS = 0x5A
@@ -51,6 +52,23 @@ try:
         green = bus.read_byte_data(GY33_ADDRESS, REG_GREEN)
         blue = bus.read_byte_data(GY33_ADDRESS, REG_BLUE)
         
+        total = red + green + blue
+        print(total)
+        if total < 60: # Diesen Schwellenwert je nach Licht anpassen
+            textcolor = "black"
+        elif total > 100:
+            textcolor = "white"
+        elif red > green and red > blue and green < blue:
+            textcolor = "red"
+        elif blue > red and blue > green:
+            textcolor = "blue"
+        elif red > blue and green > blue and green > blue:
+            textcolor = "yellow"
+        elif green > red and green > blue:
+            textcolor = "green"
+        else:
+            textcolor = ""
+
         # 16-Bit Lux berechnen (High Byte verschieben + Low Byte)
         lux_h = bus.read_byte_data(GY33_ADDRESS, REG_LUX_H)
         lux_l = bus.read_byte_data(GY33_ADDRESS, REG_LUX_L)
@@ -61,9 +79,9 @@ try:
         ct_l = bus.read_byte_data(GY33_ADDRESS, REG_CT_L)
         ct = (ct_h << 8) | ct_l
 
-        data_dict["sensor_color_floor"] = (red,green,blue)
-        data_dict["sensor_color_floor_lux"] = lux
-        data_dict["sensor_color_floor_temp"] = ct
+        data_dict["sensor_floor_color"] = json.dumps((red,green,blue))
+        data_dict["sensor_floor_color_lux"] = lux
+        data_dict["sensor_floor_color_text"] = textcolor
         mb.setmulti(data_dict)
 
         print(data_dict)
