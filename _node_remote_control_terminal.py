@@ -20,7 +20,7 @@ while True:
         num = 0
         for key, value in sorted(data.items()):
             key_list.append(key)
-            print(str(num) + " :: "+ f"{key}" + " = " + value)
+            print(str(num) + " :: "+ f"{key}" + " = " + f"{value}")
             num += 1
         print()
 

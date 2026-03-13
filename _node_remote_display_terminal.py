@@ -23,7 +23,7 @@ while True:
         output = ""
         os.system('cls' if os.name == 'nt' else 'clear')
         for key, value in sorted(data.items()):
-            output = output + f"{key}"+" : "+value+"\n"
+            output = output + f"{key}" + " : " + f"{value}" +"\n"
         
         print(f"{CURSOR_UP_LEFT}{output}", end="\r", flush=True)
 
