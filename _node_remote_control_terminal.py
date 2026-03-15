@@ -18,18 +18,21 @@ while True:
         os.system('cls' if os.name == 'nt' else 'clear')
         key_list = []
         num = 0
+        
         for key, value in sorted(data.items()):
             key_list.append(key)
             print(str(num) + " :: "+ f"{key}" + " = " + f"{value}")
             num += 1
         print()
+        print("ENTER => REFRESH ALL DATA")
 
         # INPUT
         input_key = input("key or num: ")
-        input_val = input("value: ")
 
-        if input_key == "" or input_val == "":
+        if input_key == "":
             continue
+
+        input_val = input("value: ")
 
         if input_key.isdigit():
             input_key = key_list[int(input_key)]
