@@ -10,6 +10,11 @@ distancesensorleft_base64 = "iVBORw0KGgoAAAANSUhEUgAAAOYAAADmAQMAAAD7pGv4AAAAAXN
 distancesensorright_base64 = "iVBORw0KGgoAAAANSUhEUgAAAOYAAADmAQMAAAD7pGv4AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAGUExURQAAAP///6XZn90AAAAJcEhZcwAADr8AAA6/ATgFUyQAAAA6SURBVFjD7dWhDQAwCABB9p+2A5CAxjSpqOLe3gAfdSkppZRSSil90hMzSimlu3XmoZRSSiml9JtWNjASGwLhZxiyAAAAAElFTkSuQmCC"
 distancesensorback_base64 = "iVBORw0KGgoAAAANSUhEUgAAAOYAAADmAQMAAAD7pGv4AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAGUExURQAAAP///6XZn90AAAAJcEhZcwAADr8AAA6/ATgFUyQAAAA1SURBVFjD7cmxCQAwCAAwP/D/XwUFDxC6dErWRB/KWmuttdZaa+3PjZXWWmuttdZaa5+2awC6n95XqB4BzAAAAABJRU5ErkJggg=="
 
+#from turtle import width
+
+from scipy.spatial import KDTree
+from shapely import points
+
 from libs.lib_telemtrybroker import TelemetryBroker
 
 import openpyxl
@@ -210,6 +215,7 @@ class Robot:
         self.rect_distance_back = self.image_distance_back.get_rect()
 
         self.rect_robot.center = (self.x, self.y)
+        self.robot_vector = None
         self.rect_distance_front.center = self.rect_robot.center
         self.rect_distance_left.center = self.rect_robot.center
         self.rect_distance_right.center = self.rect_robot.center
@@ -270,6 +276,22 @@ class Robot:
         self.blink_last_change = 0
         self.led_status = False
 
+    def color_to_text(self, color):
+        if color == (0,0,0):
+            return "black"
+        if color == (255,255,0):
+            return "yellow"
+        if color == (255,0,0):
+            return "red"
+        if color == (0,255,0):
+            return "green"
+        if color == (0,0,255):
+            return "blue"
+        if color == (0,255,255):
+            return "cyan"
+        if color == (255,0,255):
+            return "magenta"
+        return ""
 
     def get_sensor_data(self, sensor_dict):
         sensor_dict["sensor_angular_z"] = self.direction
@@ -280,7 +302,9 @@ class Robot:
         sensor_dict["sensor_distance_left"] = int(self.distance_left/self.scale)
         sensor_dict["sensor_distance_back"] = int(self.distance_back/self.scale)
         sensor_dict["sensor_front_color"] = str(self.front_color_detect)
+        sensor_dict["sensor_front_color_text"] = str(self.front_color_detect_text)
         sensor_dict["sensor_floor_color"] = str(self.floor_color_detect)
+        sensor_dict["sensor_floor_color_text"] = str(self.floor_color_detect_text)
         return sensor_dict
 
     def move(self, screen, vel_dict):
@@ -359,7 +383,6 @@ class Robot:
             pygame.draw.line(self.layer_painting, (0, 255, 255), self.rect_robot_center_last, self.rect_robot.center, width=4)
         self.rect_robot_center_last = self.rect_robot.center
 
-
         self.layer_robot.fill((255,255,255))
         self.layer_distance_front.fill((255,255,255))
         self.layer_distance_right.fill((255,255,255))
@@ -400,10 +423,115 @@ class Robot:
 
     def sensor_detection(self):
         self.mask_maze_surface = pygame.mask.from_surface(self.maze_surface)
-        
+        #robot_vector = pygame.Vector2(self.x, self.y)
+
+        # get color from floor
+        #a=self.tilesize/4 * math.sin(math.radians(self.direction))
+        #b=self.tilesize/4 * math.cos(math.radians(self.direction))
+        #x=int(self.rect_robot.center[0]+a)
+        #y=int(self.rect_robot.center[1]-b)
+
+        self.floor_color_detect = self.maze_coloredtiles.get_at(self.rect_robot.center)[0:3]
+        self.floor_color_detect_text = self.color_to_text(self.floor_color_detect)
+        #print("Floor color detected:", self.floor_color_detect, self.floor_color_detect_text)
+
         #distance_front:
         self.mask_distance_front = pygame.mask.from_surface(self.layer_distance_front)
-        colpoint = self.mask_distance_front.overlap(self.mask_maze_surface,(0,0))
+        overlap_mask = self.mask_distance_front.overlap_mask(self.mask_maze_surface, (0,0))
+        #collision_points = overlap_mask.outline()
+        collision_points = []
+        width, height = overlap_mask.get_size()
+        for x in range(0, width, 3):
+            for y in range(0, height, 3):
+                if overlap_mask.get_at((x, y)):
+                    collision_points.append((x, y))
+        colpoint = None
+        if len(collision_points) != 0:
+            tree = KDTree(collision_points)
+            self.distance_front, index = tree.query((self.rect_robot.center[0], self.rect_robot.center[1]))
+            colpoint = collision_points[index]
+        else:
+            self.distance_front = 10000
+
+        # get color from front
+        if colpoint is not None:
+            #print("Front color detected:", self.maze_surface.get_at(colpoint), "distance:", int(self.distance_front/self.scale))
+            if int(self.distance_front/self.scale) < 30:
+                self.front_color_detect = self.maze_surface.get_at(colpoint)[0:3]
+                self.front_color_detect_text = self.color_to_text(self.front_color_detect)
+            else:
+                self.front_color_detect = ""
+                self.front_color_detect_text = ""
+        else:
+            self.front_color_detect = ""
+            self.front_color_detect_text = ""
+
+
+
+        #distance_left:
+        self.mask_distance_left = pygame.mask.from_surface(self.layer_distance_left)
+        overlap_mask = self.mask_distance_left.overlap_mask(self.mask_maze_surface, (0,0))
+        #collision_points = overlap_mask.outline()
+        collision_points = []
+        width, height = overlap_mask.get_size()
+        for x in range(0, width, 3):
+            for y in range(0, height, 3):
+                if overlap_mask.get_at((x, y)):
+                    collision_points.append((x, y))
+        if len(collision_points) != 0:
+            tree = KDTree(collision_points)
+            self.distance_left, index = tree.query((self.rect_robot.center[0], self.rect_robot.center[1]))
+        else:
+            self.distance_left = 10000
+
+        #distance_right:
+        self.mask_distance_right = pygame.mask.from_surface(self.layer_distance_right)
+        overlap_mask = self.mask_distance_right.overlap_mask(self.mask_maze_surface, (0,0))
+        collision_points = overlap_mask.outline()
+        #collision_points = []
+        #width, height = overlap_mask.get_size()
+        #for x in range(0, width, 3):
+        #    for y in range(0, height, 3):
+        #        if overlap_mask.get_at((x, y)):
+        #            collision_points.append((x, y))
+        if len(collision_points) != 0:
+            tree = KDTree(collision_points)
+            self.distance_right, index = tree.query((self.rect_robot.center[0], self.rect_robot.center[1]))
+        else:
+            self.distance_right = 10000
+
+        #distance_back:
+        self.mask_distance_back = pygame.mask.from_surface(self.layer_distance_back)
+        overlap_mask = self.mask_distance_back.overlap_mask(self.mask_maze_surface, (0,0))
+        collision_points = overlap_mask.outline()
+        #collision_points = []
+        #width, height = overlap_mask.get_size()
+        #for x in range(0, width, 3):
+        #    for y in range(0, height, 3):
+        #        if overlap_mask.get_at((x, y)):
+        #            collision_points.append((x, y))
+        if len(collision_points) != 0:
+            tree = KDTree(collision_points)
+            self.distance_back, index = tree.query((self.rect_robot.center[0], self.rect_robot.center[1]))
+        else:
+            self.distance_back = 10000
+
+        """
+        width, height = overlap_mask.get_size()
+
+        for x in range(0, width, 3):
+            for y in range(0, height, 3):
+                if overlap_mask.get_at((x, y)):
+                    collision_points.append((x, y))
+                    
+        if len(collision_points) > 0:
+            #colpoint = min(collision_points, key=lambda p: self.robot_vector.distance_squared_to(p))
+            colpoint = min(collision_points, key=lambda p: (p[0] - self.rect_robot.center[0])**2 + (p[1] - self.rect_robot.center[1])**2)
+        else:
+            colpoint = None
+
+
+
         if colpoint is None:
             self.distance_front = 10000   
         else:
@@ -420,19 +548,25 @@ class Robot:
         except:
             self.front_color_detect = None
 
-        # get color from floor
-        a=self.tilesize/4 * math.sin(math.radians(self.direction))
-        b=self.tilesize/4 * math.cos(math.radians(self.direction))
-        x=int(self.rect_robot.center[0]+a)
-        y=int(self.rect_robot.center[1]-b)
-        try:
-            self.floor_color_detect = (self.maze_coloredtiles.get_at((x,y))[0], self.maze_coloredtiles.get_at((x,y))[1], self.maze_coloredtiles.get_at((x,y))[2])
-        except:
-            self.floor_color_detect = None
-
+        
         # distance_left:
         self.mask_distance_left = pygame.mask.from_surface(self.layer_distance_left)
-        colpoint = self.mask_distance_left.overlap(self.mask_maze_surface,(0,0))
+        overlap_mask = self.mask_distance_left.overlap_mask(self.mask_maze_surface, (0,0))
+
+        collision_points = overlap_mask.outline(every=20)
+        width, height = overlap_mask.get_size()
+
+        for x in range(0, width, 3):
+            for y in range(0, height, 3):
+                if overlap_mask.get_at((x, y)):
+                    collision_points.append((x, y))
+
+        if len(collision_points) > 0:
+            #colpoint = min(collision_points, key=lambda p: self.robot_vector.distance_squared_to(p))
+            colpoint = min(collision_points, key=lambda p: (p[0] - self.rect_robot.center[0])**2 + (p[1] - self.rect_robot.center[1])**2)
+        else:
+            colpoint = None
+
         if colpoint is None:
             self.distance_left = 10000   
         else:
@@ -442,7 +576,22 @@ class Robot:
 
         # distance_right:
         self.mask_distance_right = pygame.mask.from_surface(self.layer_distance_right)
-        colpoint = self.mask_distance_right.overlap(self.mask_maze_surface,(0,0))
+        overlap_mask = self.mask_distance_right.overlap_mask(self.mask_maze_surface, (0,0))
+
+        collision_points = overlap_mask.outline(every=20)
+        width, height = overlap_mask.get_size()
+
+        for x in range(0, width, 3):
+            for y in range(0, height, 3):
+                if overlap_mask.get_at((x, y)):
+                    collision_points.append((x, y))
+                    
+        if len(collision_points) > 0:
+            #colpoint = min(collision_points, key=lambda p: self.robot_vector.distance_squared_to(p))
+            colpoint = min(collision_points, key=lambda p: (p[0] - self.rect_robot.center[0])**2 + (p[1] - self.rect_robot.center[1])**2)
+        else:
+            colpoint = None
+
         if colpoint is None:
             self.distance_right = 10000   
         else:
@@ -452,14 +601,30 @@ class Robot:
 
         # distance_back:
         self.mask_distance_back = pygame.mask.from_surface(self.layer_distance_back)
-        colpoint = self.mask_distance_back.overlap(self.mask_maze_surface,(0,0))
+        overlap_mask = self.mask_distance_back.overlap_mask(self.mask_maze_surface, (0,0))
+
+        collision_points = overlap_mask.outline(every=20)
+        width, height = overlap_mask.get_size()
+
+        for x in range(0, width, 3):
+            for y in range(0, height, 3):
+                if overlap_mask.get_at((x, y)):
+                    collision_points.append((x, y))
+                    
+        if len(collision_points) > 0:
+            #colpoint = min(collision_points, key=lambda p: self.robot_vector.distance_squared_to(p))
+            colpoint = min(collision_points, key=lambda p: (p[0] - self.rect_robot.center[0])**2 + (p[1] - self.rect_robot.center[1])**2)
+        else:
+            colpoint = None
+
         if colpoint is None:
             self.distance_back = 10000   
         else:
             a=colpoint[0]-self.rect_distance_back.center[0]
             b=colpoint[1]-self.rect_distance_back.center[1]
             self.distance_back = int(math.sqrt(abs(a)**2 + abs(b)**2))
-
+        
+        """        
     def collision_detect(self):
         if self.distance_front==0 or self.distance_back == 0:
             return
@@ -508,11 +673,15 @@ class Gametable():
         for x in range(wx):
             for y in range(wy):
                 info = mymap.get_tile_info([x, y])
+                #print(info)
                 tile.draw(info, self.maze_surface, self.maze_coloredtiles, TILE_SIZE)
                 self.validate_cellvalue(info["value"], [x,y])
 
         return self.maze_surface, self.maze_coloredtiles
 
+
+def map_value(x, in_min, in_max, out_min, out_max):
+    return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min
 
 mb = TelemetryBroker()
 
@@ -527,8 +696,10 @@ sensor_dict = {"sensor_angular_z":0,
                "sensor_distance_right":1000,
                "sensor_distance_left":1000,
                "sensor_distance_back":1000,
-               "sensor_front_color":"None",
-               "sensor_floor_color":"None"
+               "sensor_front_color":"",
+               "sensor_floor_color":"",
+                "sensor_front_color_text":"",
+                "sensor_floor_color_text":""
                }
 
 mb.setmulti(vel_dict)
@@ -586,14 +757,17 @@ while running:
 
     pygame.display.flip()
 
-    wait = 0.02
+    wait = 0
     speed = abs(int(vel_dict["vel_linear_x"]))
+    if speed == 0:
+        speed = abs(int(vel_dict["vel_linear_y"]))
     if speed == 0:
         speed = abs(int(vel_dict["vel_angular_z"]))
     if speed > 0:
-        wait = 1/(speed/2)
+        wait = 0.01
 
-    time.sleep(wait)
+    wait = map_value(speed, 0, 100, 0.001, 1)
+    #time.sleep(wait)
 
 pygame.quit()
 sys.exit()
