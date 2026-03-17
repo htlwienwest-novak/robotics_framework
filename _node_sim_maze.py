@@ -431,8 +431,12 @@ class Robot:
         #x=int(self.rect_robot.center[0]+a)
         #y=int(self.rect_robot.center[1]-b)
 
-        self.floor_color_detect = self.maze_coloredtiles.get_at(self.rect_robot.center)[0:3]
-        self.floor_color_detect_text = self.color_to_text(self.floor_color_detect)
+        if self.rect_robot.center[0] < 0 or self.rect_robot.center[0] >= self.maze_surface.get_width() or self.rect_robot.center[1] < 0 or self.rect_robot.center[1] >= self.maze_surface.get_height():
+            self.floor_color_detect = (255,255,255)
+            self.floor_color_detect_text = "white"
+        else:
+            self.floor_color_detect = self.maze_coloredtiles.get_at(self.rect_robot.center)[0:3]
+            self.floor_color_detect_text = self.color_to_text(self.floor_color_detect)
         #print("Floor color detected:", self.floor_color_detect, self.floor_color_detect_text)
 
         #distance_front:
