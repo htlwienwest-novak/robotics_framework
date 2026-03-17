@@ -126,7 +126,7 @@ class TelemetryBroker:
     #   key    - key name   
     def delkey(self, key):
         if self.get_node_permission() < 2:
-            return None
+            return
         self.__r.delete(key)
     
     # Set callback function for keys
