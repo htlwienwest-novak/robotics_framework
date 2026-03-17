@@ -9,32 +9,10 @@ mb = TelemetryBroker()
 
 time.sleep(5) # wait for all nodes to be ready
 
-target_angle = 0  # target angle for rotation
+mb.set("vel_linear_x", 100)
+time.sleep(5) # move forward for 5 seconds
+mb.set("vel_linear_x", 0)
 
-while True:
-    # GO FORWARD WITH SPEED 100 UNTIL OBSTACLE IN FRONT IS LESS THAN 15 PIXEL
-    mb.set("vel_linear_x", 100)
-    while True:
-        distance = mb.get("sensor_distance_front")
-        print(f"Distance: {distance}")
-        if distance < 15:
-            break
-    mb.set("vel_linear_x", 0)
-
-    time.sleep(0.5) # wait for 0.5s
-
-    # ROTATE WITH SPEED 100 UNTIL ANGLE IS 90 DEGREE
-    target_angle += 90
-    mb.set("vel_angular_z", 100)
-    while True:
-        angle = mb.get("sensor_angular_z")
-        print(f"Angle: {angle}")
-        if angle >= target_angle:
-            break
-    mb.set("vel_angular_z", 0)
-
-    if target_angle >= 270:
-        target_angle = 0
 
 
 
