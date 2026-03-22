@@ -8,6 +8,7 @@ import os
 mb = TelemetryBroker()
 
 datadict = {"reboot":0, "shutdown":0}
+mb.setmulti(datadict)
 
 
 while True:
