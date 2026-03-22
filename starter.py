@@ -18,7 +18,7 @@ import glob
 import time
 from libs.lib_telemtrybroker import TelemetryBroker
 
-#time.sleep(5)
+time.sleep(5)
 
 mb = TelemetryBroker() 
 mb.clearall()
