@@ -10,11 +10,11 @@ from libs.lib_telemtrybroker import TelemetryBroker
 import board
 import neopixel
 import time
-import math
+import json
 
 mb = TelemetryBroker()
 
-data_dict = {"neopixel_color":(0,0,0), "neopixel_blink":0}
+data_dict = {"neopixel_color":json.dumps((0,0,0)), "neopixel_blink":0}
 
 # Konfiguration
 LED_PIN = board.D18          # GPIO 18
@@ -31,12 +31,13 @@ pixels = neopixel.NeoPixel(
 try:
     while True:
         data_dict = mb.getmulti(data_dict.keys())
+        
         if data_dict is None:
             continue
 
         if data_dict["neopixel_blink"] == 1:
             for i in range(BLINK_COUNT):
-                pixels.fill(data_dict["neopixel_color"])
+                pixels.fill(json.loads(data_dict["neopixel_color"]))
                 pixels.show()
                 time.sleep(BLINK_DURATION)
                 pixels.fill((0, 0, 0))
@@ -47,7 +48,7 @@ try:
             mb.setmulti(data_dict)
 
         else:
-            pixels.fill(data_dict["neopixel_color"])
+            pixels.fill(json.loads((data_dict["neopixel_color"])))
             pixels.show()
             time.sleep(1)
 
