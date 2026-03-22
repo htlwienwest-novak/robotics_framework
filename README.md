@@ -11,7 +11,7 @@ Redis is used only for communication (ipc) between nodes and not for storing dat
 Disable persisence of redis db.
 It protects the hard drive or SD card from damage.
 
-Change redis config to disable writing on hd or sd:
+Change redis config to disable writing on hd or sd and allow remote connections:
 ```
 sudo nano /etc/redis/redis.conf
 ```
@@ -19,6 +19,8 @@ change or append the following settings in redis.conf:
 ```
 save ""
 appendonly no
+bind 0.0.0.0
+protected-mode no
 ```
 Restart redis:
 ```
