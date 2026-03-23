@@ -54,7 +54,8 @@ Terminal=true
    Stops all running nodes
 ---
 # Node Description:
-All nodes are optimized for Raspberry Pi 5
+All nodes are optimized for Raspberry Pi 4 and 5
+Not hardware specific nodes also running on Windows 
 
 # node_master
 The Brain. Master-Node for controlling system for autonomous driving.
@@ -75,6 +76,10 @@ pip install opencv-python
 ## used keys
 - sensor_camera_color => (R, G, B)
 - sensor_camera_letter => H, S, U
+## wiring diagram
+|Camera|Pi|
+|:---|:---|
+|USB or CSI|USB or CSI|
 
 # node_camera_without_ocr
 Node for camera sensor for recognition colors and letters H, S, U with image-mapping
@@ -86,6 +91,10 @@ pip install opencv-python
 ## used keys
 - sensor_camera_color => (0, 0, 0) to (255,255,255)
 - sensor_camera_letter => H, S, U
+## wiring diagram
+|Camera|Pi|
+|:---|:---|
+|USB or CSI|USB or CSI|
 
 # node_motor_control_mecanum
 Node for Motor Control for 4 Motors with Mecanum Wheels
@@ -97,6 +106,16 @@ pip install gpiozero
 - vel_linear_x => -100 to 100
 - vel_linear_y => -100 to 100
 - vel_angular_z => -100 to 100
+## wiring diagram
+|Motor Controller|Pi|
+|:---|:---|
+|IN1|Digital Pin (PWM)|
+|IN2|Digital Pin (PWM)|
+|IN3|Digital Pin (PWM)|
+|IN4|Digital Pin (PWM)|
+|GND|GND and Battery-|
+|5V|3.3V or 5V|
+|12V|Battery+|
 
 # node_motor_control
 Node for Motor Control for 2 Motors (left and right)
@@ -107,6 +126,16 @@ pip install gpiozero
 ## used keys
 - vel_linear_x => -100 to 100
 - vel_angular_z => -100 to 100
+## wiring diagram
+|Motor Controller|Pi|
+|:---|:---|
+|IN1|Digital Pin (PWM)|
+|IN2|Digital Pin (PWM)|
+|IN3|Digital Pin (PWM)|
+|IN4|Digital Pin (PWM)|
+|GND|GND and Battery-|
+|5V|3.3V or 5V|
+|12V|Battery+|
 
 # node_remote_control_ps4
 node for ps4 remote controller via bluetooth
@@ -150,6 +179,14 @@ pip install adafruit-circuitpython-tcs34725
 - sensor_color_floor => (0,0,0) to (255,255,255)
 - sensor_color_floor_lux
 - sensor_color_floor_temp
+## wiring diagram
+|Color Sensor|Pi|
+|:---|:---|
+|VCC|3.3V|
+|GND|GND|
+|DR|SDA|
+|CT|SCL|
+Soldering S0 to GND for I2C Mode of GY33
 
 # node_sensor_distance
 node for VL53L4CD lidar distance sensors ia i2c
@@ -163,6 +200,15 @@ pip install adafruit-circuitpython-vl53l4cd
 - sensor_distance_right => distance in mm
 - sensor_distance_back => distance in mm
 - sensor_distance_left => distance in mm
+## wiring diagram
+|Liadr Sensor|Pi|
+|:---|:---|
+|VIN|3.3V|
+|GND|GND|
+|SDA|SDA|
+|SCL|SCL|
+|XSHUT|Digital Output|
+XSHUT is necessery for multisensor, it's turn off sensor for programming I2C address
 
 # node_sensor_distance_360
 node for Slamtec RPLidar C1 360 distance sensors via USB
@@ -172,6 +218,10 @@ nothing
 ```
 ## used keys
 - sensor_distance_360 => JSON => degree:distance => e.g. {0:20, 1:34, 3:12, .....}
+## wiring diagram
+|RPLidar C1|Pi|
+|:---|:---|
+|USB|USB|
 
 # node_sensor_orientation_floor
 node for PMW3901 orientation flow sensor via spi
@@ -182,6 +232,16 @@ pip install pmw3901 spidev
 ## used keys
 - sensor_linear_abs_x => absolute distance
 - sensor_linear_abs_y => absolute distance
+## wiring diagram
+|PWM3901|Pi|
+|:---|:---|
+|3V3|3V3|
+|GND|GND|
+|MOSI|MISO|
+|MISO|MOSI|
+|SCLK|SCLK|
+|CS|Digital Output|
+Working range 80mm to infinity
 
 # node_sensor_orientation
 node for BNO08x orientation and psoition sensor via i2c
@@ -197,6 +257,13 @@ pip install adafruit-circuitpython-bno08x
 - sensor_linear_rel_x => relative distance
 - sensor_linear_rel_y => relative distance
 - sensor_linear_rel_z => relative distance
+## wiring diagram
+|BNO08x|Pi|
+|:---|:---|
+|3V3|3V3|
+|GND|GND|
+|SDA|SDA|
+|SCL|SCL|
 
 # node_servo_control_16x
 Node for Servo Control via 16 channel PWM Driver i2c
@@ -206,6 +273,15 @@ pip install adafruit-circuitpython-servokit
 ```
 ## used keys
 - servo_0 to servo_15 => 0 to 180
+## wiring diagram
+|PWM Driver|Pi|
+|:---|:---|
+|3V3|3V3|
+|GND|GND|
+|SDA|SDA|
+|SCL|SCL|
+|5V|5V Battery+|
+|GND|Battery-|
 
 # node_sim_maze
 node for simulation of maze gametable
@@ -229,3 +305,44 @@ pip install pygame
 - vel_angular_z
 - tool_pen
 - led_blink
+
+# node_neopixel
+Node for neopixel rgb led stripes
+## requirements
+```
+pip install adafruit-blinka
+pip install rpi_ws281x adafruit-circuitpython-neopixel
+```
+## used keys
+- neopixel_color => (R, G, B)
+- neopixel_blink => 0 or 1
+## wiring diagram
+|PWM Driver|Pi|
+|:---|:---|
+|5V|5V|
+|GND|GND|
+|Data|Digital Output|
+
+# node_http_server
+Node for receiveing requests with key and value data
+POST or GET Requests are possible:
+GET: http://robotip:5000?key=value
+POST: http://robotip:5000/ with JSON in body
+## requirements
+```
+pip install flask
+```
+## used keys
+- all available keys
+
+# node_system_operations
+Node for doing system commands on linux
+e.g. reboot, shutdown,...
+it can be triggerd remotely over network
+## used keys
+- reboot
+- shutdown
+
+# Android Remote App
+Remote steering app for android
+node_http_server is necessary for communication
