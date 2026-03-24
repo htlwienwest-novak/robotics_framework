@@ -217,11 +217,22 @@ node for Slamtec RPLidar C1 360 distance sensors via USB
 nothing
 ```
 ## used keys
-- sensor_distance_360 => JSON => degree:distance => e.g. {0:20, 1:34, 3:12, .....}
+- sensor_distance_360 => Dictionary => degree:distance => e.g. {0:20, 1:34, 3:12, .....}
 ## wiring diagram
 |RPLidar C1|Pi|
 |:---|:---|
 |USB|USB|
+
+# node_sensor_distance_360_vis
+Visualition for node_sensor_distance_360
+Can also be used remotly
+## requirements
+```
+pip install matplotlib
+pip install numpy
+```
+## used keys
+- sensor_distance_360
 
 # node_sensor_orientation_floor
 node for PMW3901 orientation flow sensor via spi

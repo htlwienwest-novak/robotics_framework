@@ -3,6 +3,7 @@
 # sensor system with 4 sensors: front, right, left, back
 # Developed by Martin Novak at 2025/26
 # Installation on raspberry pi:
+# pip install matplotlib, numpy
 
 from libs.lib_telemtrybroker import TelemetryBroker
 import matplotlib.pyplot as plt
