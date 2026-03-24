@@ -6,7 +6,6 @@
 from libs.lib_telemtrybroker import TelemetryBroker
 import smbus2
 import time
-import json
 
 mb = TelemetryBroker()
 
@@ -79,7 +78,7 @@ try:
         ct_l = bus.read_byte_data(GY33_ADDRESS, REG_CT_L)
         ct = (ct_h << 8) | ct_l
 
-        data_dict["sensor_floor_color"] = json.dumps((red,green,blue))
+        data_dict["sensor_floor_color"] = (red,green,blue)
         data_dict["sensor_floor_color_lux"] = lux
         data_dict["sensor_floor_color_text"] = textcolor
         mb.setmulti(data_dict)

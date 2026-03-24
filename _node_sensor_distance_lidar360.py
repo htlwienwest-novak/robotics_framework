@@ -7,7 +7,6 @@
 from libs.lib_telemtrybroker import TelemetryBroker
 import serial
 import time
-import json
 
 mb = TelemetryBroker()
 
@@ -59,7 +58,7 @@ def get_lidar_data():
                 #print(f"Winkel: {angle}° | Distanz: {distance:8} mm | Qualität: {quality}")
                 #data_dict["sensor_distance_"+str(angle)] = distance
                 angle_dict[angle] = distance
-                data_dict["sensor_distance_360"] = json.dumps(angle_dict)
+                data_dict["sensor_distance_360"] = angle_dict
                 mb.setmulti(data_dict)
 
     except KeyboardInterrupt:
