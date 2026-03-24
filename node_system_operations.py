@@ -17,8 +17,10 @@ while True:
         #print(datadict)
         if datadict["reboot"] == 1:
             os.system("sudo reboot")
+            break
         if datadict["shutdown"] == 1:
             os.system("sudo shutdown now")
+            break
 
         time.sleep(3)
     except KeyboardInterrupt:
