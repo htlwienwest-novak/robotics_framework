@@ -12,7 +12,7 @@ mb = TelemetryBroker()
 
 data_dict = {}
 angle_dict = {}
-measured_angles = [0, 90, 180, 270]
+measured_angles = [0, 90, 180, 270]   # Winkel Filter, nur diese Winkel werden verarbeitet
 
 PORT = '/dev/ttyUSB0'
 BAUD = 460800
