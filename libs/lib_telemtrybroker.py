@@ -40,6 +40,8 @@ class TelemetryBroker:
     def type_validator_get(self, value):
         if value is None:
             return None
+        if len(value) == 0:
+            return None
         if value[0] == '{' and value[-1] == '}' or value[0] == '[' and value[-1] == ']':
             return json.loads(value)
         cvalue = value.replace('-', '', 1)
