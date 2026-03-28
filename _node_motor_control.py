@@ -23,8 +23,9 @@ class DCMotor:
             self.motor.backward(speed)
         
 mb = TelemetryBroker()
-m1 = DCMotor(12, 13) 
-m2 = DCMotor(19, 26)
+# empfohlene GPIO Pins für Motoren:
+m1 = DCMotor(5, 6)  
+m2 = DCMotor(23, 24) 
 
 vel_dict = {"vel_linear_x":0, "vel_angular_z":0}
 
