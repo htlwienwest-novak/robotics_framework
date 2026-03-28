@@ -18,7 +18,7 @@ data_dict = {"servo_0":0}
 print("SERVO PWM DRIVER started!")
 
 while True:
-    data_dict = mb.getallWith("servo_*")
+    data_dict = mb.getallStartsWith("servo_*")
     #print(data_dict)
     for key, value in data_dict.items():
 
