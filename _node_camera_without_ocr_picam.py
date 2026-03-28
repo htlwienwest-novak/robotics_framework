@@ -32,17 +32,17 @@ for key, tpl in templates.items():
 
 # Webcam oder Bildquelle initialisieren
 picam1 = Picamera2()
-picam2 = Picamera2(1)
+#picam2 = Picamera2(1)
 
 # Kamera konfigurieren (Auflösung festlegen, z.B. 640x480 für flüssiges Live-Bild)
 config1 = picam1.create_preview_configuration(main={"size": (640, 480)})
-config2 = picam2.create_preview_configuration(main={"size": (640, 480)})
+#config2 = picam2.create_preview_configuration(main={"size": (640, 480)})
 picam1.configure(config1)
-picam2.configure(config2)
+#picam2.configure(config2)
 
 # Kamera starten
 picam1.start()
-picam2.start()
+#picam2.start()
 
 time.sleep(1) # Allow camera to warm up
 
@@ -132,17 +132,17 @@ def scan_for_colors(frame):
 while True:
     try:
         frame1 = picam1.capture_array()        
-        frame2 = picam2.capture_array()
+        #frame2 = picam2.capture_array()
 
         frame1 = cv2.cvtColor(frame1, cv2.COLOR_RGB2BGR)
-        frame2 = cv2.cvtColor(frame2, cv2.COLOR_RGB2BGR)
+        #frame2 = cv2.cvtColor(frame2, cv2.COLOR_RGB2BGR)
 
 
         sensor_dict = sensor_dict_orig.copy()
         frame1 = scan_for_letters(frame1)
         frame1 = scan_for_colors(frame1)
-        frame2 = scan_for_letters(frame2)
-        frame2 = scan_for_colors(frame2)
+        #frame2 = scan_for_letters(frame2)
+        #frame2 = scan_for_colors(frame2)
 
         mb.setmulti(sensor_dict)
         #cv2.imshow('cam1', frame1)
