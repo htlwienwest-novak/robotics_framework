@@ -168,7 +168,7 @@ nothing
 ## used keys
 all keys
 
-# node_sensor_color_floor
+# node_sensor_color_floor_gy33
 node for GY-33 TCS34725 color detecter sensor via i2c
 ## requirements
 ```
@@ -177,8 +177,8 @@ pip install adafruit-circuitpython-tcs34725
 ```
 ## used keys
 - sensor_color_floor => (0,0,0) to (255,255,255)
-- sensor_color_floor_lux
-- sensor_color_floor_temp
+- sensor_color_floor_calibrate => 1
+- sensor_color_floor_text => text of color (e.g. red, green, blue)
 ## wiring diagram
 |Color Sensor|Pi|
 |:---|:---|
@@ -186,9 +186,11 @@ pip install adafruit-circuitpython-tcs34725
 |GND|GND|
 |DR|SDA|
 |CT|SCL|
+
+Use DR/CT instead of SDL/SCL on Sensor for I2C.
 Soldering S0 to GND for I2C Mode of GY33
 
-# node_sensor_distance
+# node_sensor_distance_lidar_vl53l4cd
 node for VL53L4CD lidar distance sensors ia i2c
 ## requirements
 ```
@@ -201,13 +203,14 @@ pip install adafruit-circuitpython-vl53l4cd
 - sensor_distance_back => distance in mm
 - sensor_distance_left => distance in mm
 ## wiring diagram
-|Liadr Sensor|Pi|
-|:---|:---|
-|VIN|3.3V|
-|GND|GND|
-|SDA|SDA|
-|SCL|SCL|
-|XSHUT|Digital Output|
+|Lidar Sensor|Pi|info|
+|:---|:---||
+|VIN|3.3V||
+|GND|GND||
+|SDA|SDA||
+|SCL|SCL||
+|XSHUT|Digital Output|for multisensor only|
+
 XSHUT is necessery for multisensor, it's turn off sensor for programming I2C address
 
 # node_sensor_distance_360
@@ -234,7 +237,7 @@ pip install numpy
 ## used keys
 - sensor_distance_360
 
-# node_sensor_orientation_floor
+# node_sensor_orientation_floor_pmw3901
 node for PMW3901 orientation flow sensor via spi
 ## requirements
 ```
@@ -244,17 +247,18 @@ pip install pmw3901 spidev
 - sensor_linear_abs_x => absolute distance
 - sensor_linear_abs_y => absolute distance
 ## wiring diagram
-|PWM3901|Pi|
-|:---|:---|
-|3V3|3V3|
-|GND|GND|
-|MOSI|MISO|
-|MISO|MOSI|
-|SCLK|SCLK|
-|CS|Digital Output|
-Working range 80mm to infinity
+|PWM3901|Pi|info|
+|:---|:---||
+|3V3|3V3||
+|GND|GND||
+|MOSI|MISO||
+|MISO|MOSI||
+|SCLK|SCLK||
+|CS|Digital Output|for multisensor only|
 
-# node_sensor_orientation
+working range 80mm to infinity
+
+# node_sensor_orientation_bno08x
 node for BNO08x orientation and psoition sensor via i2c
 ## requirements
 ```
@@ -285,14 +289,14 @@ pip install adafruit-circuitpython-servokit
 ## used keys
 - servo_0 to servo_15 => 0 to 180
 ## wiring diagram
-|PWM Driver|Pi|
-|:---|:---|
-|3V3|3V3|
-|GND|GND|
-|SDA|SDA|
-|SCL|SCL|
-|5V|5V Battery+|
-|GND|Battery-|
+|PWM Driver|Pi|info|
+|:---|:---||
+|VCC|3V3|logic voltage|
+|GND|GND||
+|SDA|SDA||
+|SCL|SCL||
+|5V|5V Battery+|motor voltage|
+|GND|Battery-||
 
 # node_sim_maze
 node for simulation of maze gametable
@@ -351,8 +355,8 @@ Node for doing system commands on linux
 e.g. reboot, shutdown,...
 it can be triggerd remotely over network
 ## used keys
-- reboot
-- shutdown
+- reboot => 1
+- shutdown => 1
 
 # Android Remote App
 Remote steering app for android
