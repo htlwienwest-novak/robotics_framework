@@ -9,7 +9,7 @@ from libs.lib_telemtrybroker import TelemetryBroker
 
 import time
 import board
-import busio
+#import busio
 from adafruit_vl53l4cd import VL53L4CD
 from gpiozero import LED
 
