@@ -20,14 +20,16 @@ while True:
         num = 0
         
         for key, value in sorted(data.items()):
+            if key.startswith("node_") or key.startswith("_node_"):
+                continue
             key_list.append(key)
-            print(str(num) + " :: "+ f"{key}" + " = " + f"{value}")
+            print(f"{num:>2}  :  {key:<30}{value}")
             num += 1
         print()
         print("ENTER => REFRESH ALL DATA")
 
         # INPUT
-        input_key = input("key or num: ")
+        input_key = input("keyname or number: ")
 
         if input_key == "":
             continue

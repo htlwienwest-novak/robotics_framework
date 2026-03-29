@@ -4,31 +4,37 @@
 from libs.lib_telemtrybroker import TelemetryBroker
 import time
 import os
+from rich.live import Live
+from rich.table import Table
 
 mb = TelemetryBroker()
 
 vel_dict = {"vel_linear_x":0, "vel_angular_z":0, "tool_pen":0, "led_blink":0}
 
+table = Table()
+table.add_column("Key")
+table.add_column("Value")
 
-CURSOR_UP_LEFT = "\033[H"  # Springt nach ganz oben links (Home)
-HIDE_CURSOR = "\033[?25l"  # Versteckt den blinkenden Cursor (optional)
-SHOW_CURSOR = "\033[?25h"  # Zeigt ihn wieder an
+with Live(table, refresh_per_second=20) as live:
+    while True:
+        try:
+            table = Table(show_header=False, show_lines=True, padding=(0, 1, 0, 1), box=None)
+            data = mb.getall()
+            table.add_row("ACTIVE NODES:", style="bold green")
 
-print(HIDE_CURSOR, end="") # Cursor verstecken für besseren Look
+            for key, value in sorted(data.items()):
+                if key.startswith("node_") or key.startswith("_node_"):
+                    table.add_row(key, style="green")
 
-while True:
-    try:
-        #time.sleep(0.1)
-        data = mb.getall()
-        output = ""
-        os.system('cls' if os.name == 'nt' else 'clear')
-        for key, value in sorted(data.items()):
-            output = output + f"{key}" + " : " + f"{value}" +"\n"
-        
-        print(f"{CURSOR_UP_LEFT}{output}", end="\r", flush=True)
+            table.add_row("ACTIVE DATA:", style="bold")
 
-    except KeyboardInterrupt:
-        print(SHOW_CURSOR)
-        break
+            for key, value in sorted(data.items()):
+                if not key.startswith("node_") and not key.startswith("_node_"):
+                    table.add_row(key, str(value))
+            
+            live.update(table)
 
-mb.close()
+        except KeyboardInterrupt:
+            break
+
+
