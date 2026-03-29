@@ -1,6 +1,7 @@
 # TelemetryBroker for Inter Process Communication for Robtics
 # Node as Remote Control via Console
 # Developed by Martin Novak at 2025/26
+#  pip install rich
 from libs.lib_telemtrybroker import TelemetryBroker
 import time
 import os

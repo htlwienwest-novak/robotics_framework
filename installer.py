@@ -25,13 +25,15 @@ pip_install_linux = [
     "pmw3901",
     "spidev",
     "openpyxl",
-    "psutil"
+    "psutil",
+    "rich"
 ]
 
 pip_install_remote = [
     "redis",
     "matplotlib",
-    "numpy"
+    "numpy",
+    "rich"
 ]
 
 
