@@ -5,7 +5,7 @@
 import time
 import os
 
-pip_install_linux = [
+pip_install_robot = [
     "redis",
     "gpiozero",
     "opencv-python",
@@ -26,7 +26,7 @@ pip_install_linux = [
     "spidev",
     "openpyxl",
     "psutil",
-    "rich"
+    "rich",
 ]
 
 pip_install_remote = [
@@ -36,28 +36,53 @@ pip_install_remote = [
     "rich"
 ]
 
+pip_install_sim = [
+    "redis",
+    "rich",
+    "openpyxl",
+    "scipy",
+    "shapely",
+    "pygame"
+]
+
 
 try:
+    os.system('cls' if os.name == 'nt' else 'clear')
     print("Installation of Robotics Framework")
-    system = input("Destination System (1 => Robot, 2 => Remote):")
     if os.name == 'posix':
-        #LINUX:
-        if system == "1":
-            for lib in pip_install_linux:
-                os.system(f"pip install {lib} --break-system-packages")
-        if system == "2":
-            for lib in pip_install_remote:
-                os.system(f"pip install {lib} --break-system-packages")
-
+        print("Linux System detected!")
     elif os.name == 'nt':
-        #WINDOWS
-        if system == "1":
-            for lib in pip_install_linux:
+        print("Windows System detected!")
+    else:
+        print("Unknown OS")
+        exit()
+    system = input("Destination System (1 => Fully Robot, 2 => Remote only, 3 => Simulation only):")
+    if system == "1":
+        for lib in pip_install_robot:
+            if os.name == 'posix':
+                os.system(f"pip install {lib} --break-system-packages")
+            elif os.name == 'nt':
                 os.system(f"pip install {lib}")
-        if system == "2":
-            for lib in pip_install_remote:
+            else:
+                print("Unknown OS")
+    if system == "2":
+        for lib in pip_install_remote:
+            if os.name == 'posix':
+                os.system(f"pip install {lib} --break-system-packages")
+            elif os.name == 'nt':
                 os.system(f"pip install {lib}")
+            else:
+                print("Unknown OS")
+    if system == "3":
+        for lib in pip_install_sim:
+            if os.name == 'posix':
+                os.system(f"pip install {lib} --break-system-packages")
+            elif os.name == 'nt':
+                os.system(f"pip install {lib}")
+            else:
+                print("Unknown OS")
 
+    
     print("Installation Completed")
 except KeyboardInterrupt:
     print("Installation Aborted")
