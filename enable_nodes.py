@@ -42,7 +42,10 @@ while True:
         print()
 
         # INPUT
-        print("ENTER => refresh nodelist, x => exit")
+        print("ENTER => refresh nodelist")
+        print("s => start enabled nodes")
+        print("x => stop all running nodes")
+        print("q => quit")
         input_key = input("enable/disable node with number: ")
 
         if input_key == "":
@@ -64,9 +67,14 @@ while True:
                 #print(f"Erfolg: {datei.name} -> {file_name}")
             except Exception as e:
                 print(f"Fehler bei {datei.name}: {e}")
-        elif input_key == "x":
+        elif input_key == "s":
+            print("Starting Nodes...")
+            os.system("python starter.py")
+        elif input_key == "q":
             break
-
+        elif input_key == "x":
+            print("Stopping Nodes...")
+            os.system("python stop.py")
     except KeyboardInterrupt:
         break
 

@@ -32,7 +32,11 @@ def auto_kill_node_scripts():
             if "python" in proc.info['name'].lower() and script_name.startswith("node"):
                 if proc.info['pid'] != meine_pid:
                     print(f"[*] Beende automatisch: {script_name} (PID: {proc.info['pid']})")
+                    parent = proc.parent()
                     proc.terminate()
+                    if parent:
+                        parent.kill()
+                    #proc.kill()
                     gefundene_prozesse += 1
 
         except (psutil.NoSuchProcess, psutil.AccessDenied):
