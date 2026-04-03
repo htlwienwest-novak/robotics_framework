@@ -121,13 +121,15 @@ def menu_installer():
         "openpyxl",
         "psutil",
         "rich",
+        "pynput"
     ]
 
     pip_install_remote = [
         "redis",
         "matplotlib",
         "numpy",
-        "rich"
+        "rich",
+        "pynput"
     ]
 
     pip_install_sim = [
@@ -136,7 +138,8 @@ def menu_installer():
         "openpyxl",
         "scipy",
         "shapely",
-        "pygame"
+        "pygame",
+        "pynput"
     ]
 
 
@@ -224,8 +227,11 @@ def auto_kill_node_scripts():
                     #proc.kill()
                     gefundene_prozesse += 1
 
+
         except (psutil.NoSuchProcess, psutil.AccessDenied):
             continue
+
+    mb.clearall()
 
     if gefundene_prozesse == 0:
         print("[i] Keine passenden Skripte gefunden.")
@@ -273,6 +279,7 @@ def menu_show_live_data():
 
 
 start_installer()
+mb.clearall()
 
 while True:
     os.system('cls' if os.name == 'nt' else 'clear')
