@@ -43,13 +43,14 @@ def menu_node_management():
 
             os.system('cls' if os.name == 'nt' else 'clear')
             num = 0
-            key_list = []
-            data_dict = {}  
             
-            print(f"{GRUEN}CONTROL CENTER - NODE MANAGEMENT{RESET}")
+            print(f"{GELB}CONTROL CENTER - NODE MANAGEMENT{RESET}")
 
             for name in file_list:
-                print(f"{num:>2} : {name}")
+                if name.startswith("_"):
+                    print(f"{ROT}{num:>2} : {name}{RESET}")
+                else:
+                    print(f"{GRUEN}{num:>2} : {name}{RESET}")
                 num += 1
 
             print()
