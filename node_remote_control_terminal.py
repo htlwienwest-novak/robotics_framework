@@ -7,6 +7,12 @@ import os
 
 mb = TelemetryBroker()
 
+ROT = "\033[31m"
+GRUEN = "\033[32m"
+GELB = "\033[33m"
+BLAU = "\033[34m"
+RESET = "\033[0m" # Ganz wichtig, um die Farbe wieder zurückzusetzen!
+
 data_dict = {}
 num = 0
 key_list = []
@@ -26,11 +32,13 @@ while True:
             print(f"{num:>2}  :  {key:<30}{value}")
             num += 1
         print()
-        print("ENTER => REFRESH ALL DATA")
+        print(f"{GELB}ENTER => REFRESH ALL DATA{RESET}")
 
         # INPUT
         input_key = input("keyname or number: ")
 
+        if input_key == "q":
+            break
         if input_key == "":
             continue
 
