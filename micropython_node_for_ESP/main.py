@@ -9,7 +9,7 @@ HOST = "10.42.0.1"
 wifi = wlan.WLAN(SSID, PASSWORD)
 wifi.connect()
 
-mb = TelemetryBroker()
+mb = TelemetryBroker(HOST)
 
 while True:
     try:
