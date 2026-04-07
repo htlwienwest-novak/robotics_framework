@@ -39,22 +39,27 @@ sudo nano ~/.config/autostart/nodestarter.desktop
 [Desktop Entry]
 Type=Application
 Name=Node Starter
-Exec=python3 /home/musa/robotics_framework/starter.py
+Exec=python3 /home/robot/robotics_framework/starter.py
 Terminal=true
 ```
 ---
 # Helper Scripts:
+- control_center.py
+   Easy enable or disable nodes
+   Easy start enabled nodes
+   Easy stop running nodes
+   Easy show live data
+   Easy manipulate data via console
+   Easy install libraries
 - starter.py
    Starts all enabled nodes:
       Enabled nodes are nodes that begin with node_*
       All nodes with a different starting name, e.g., __node_*, are disabled.
-- disable_all_nodes.py
-   Disabled all nodes with renaming to _node_*
-- stop.py
-   Stops all running nodes
+      Used as starter sript at boot
+
 ---
 # Node Description:
-All nodes are optimized for Raspberry Pi 4 and 5
+All nodes are optimized for Raspberry Pi 4 and 5.
 Not hardware specific nodes also running on Windows 
 
 # node_master
@@ -251,8 +256,8 @@ pip install pmw3901 spidev
 |:---|:---||
 |3V3|3V3||
 |GND|GND||
-|MOSI|MISO||
-|MISO|MOSI||
+|MOSI|MOSI||
+|MISO|MISO||
 |SCLK|SCLK||
 |CS|Digital Output|for multisensor only|
 
@@ -339,7 +344,7 @@ pip install rpi_ws281x adafruit-circuitpython-neopixel
 |Data|Digital Output|
 
 # node_http_server
-Node for receiveing requests with key and value data
+Node for recieving requests with key and value data
 POST or GET Requests are possible:
 GET: http://robotip:5000?key=value
 POST: http://robotip:5000/ with JSON in body
@@ -358,6 +363,26 @@ it can be triggerd remotely over network
 - reboot => 1
 - shutdown => 1
 
+# node_remote_control_keyboard
+Node for remote steering via keyboard from another computer
+## requirements
+```
+pip install pynput
+```
+## used keys
+- vel_linear_x
+- vel_linear_y
+- vel_angular_z
+- tool_pen
+- led_blink
+
+# node_esp
+Node for ESP8266/ESP32 as Client
+Communication about WIFI and Redis
+## used keys
+- all available keys
+
 # Android Remote App
 Remote steering app for android
 node_http_server is necessary for communication
+
