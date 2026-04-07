@@ -35,7 +35,7 @@ for file in files:
 
     if os.name == 'posix':
         #LINUX:
-        command = f'python "{file}"; echo "Skript beendet. Drücke Enter zum Schließen..."; read'
+        command = f'sudo -e python "{file}"; echo "Skript beendet. Drücke Enter zum Schließen..."; read'
         subprocess.Popen(["lxterminal", "--command", f"bash -c '{command}'"])
 
     elif os.name == 'nt':
