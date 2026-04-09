@@ -25,7 +25,10 @@ bno.enable_feature(BNO_REPORT_LINEAR_ACCELERATION)
 mb = TelemetryBroker()
 
 data_dict = {"sensor_angular_abs_z":0, "sensor_angular_abs_y":0, "sensor_angular_abs_x":0, 
-               "sensor_linear_rel_x":0, "sensor_linear_rel_y":0, "sensor_linear_rel_z":0}
+               "sensor_linear_rel_x":0, "sensor_linear_rel_y":0, "sensor_linear_rel_z":0,
+               "sensor_angular_abs_z_offset":0}
+
+mb.setmulti(data_dict)
 
 def quaternion_to_euler(quat):
     """
@@ -73,10 +76,10 @@ try:
             lin_x, lin_y, lin_z = bno.linear_acceleration
             #print(f"LINEAR -> X: {lin_x:6.2f} Y: {lin_y:6.2f} Z: {lin_z:6.2f}")
             #print(f"X (Roll): {r:7.2f}° | Y (Pitch): {p:7.2f}° | Z (Yaw): {y:7.2f}°")
-            
+
             data_dict["sensor_angular_abs_x"] = int(r)
             data_dict["sensor_angular_abs_y"] = int(p)
-            data_dict["sensor_angular_abs_z"] = int(y)
+            data_dict["sensor_angular_abs_z"] = int(y) - mb.get("sensor_angular_abs_z_offset")  # Offset für Yaw (Heading) berücksichtigen
             data_dict["sensor_linear_rel_x"] = round(lin_x,2)
             data_dict["sensor_linear_rel_y"] = round(lin_y,2)
             data_dict["sensor_linear_rel_z"] = round(lin_z,2)
