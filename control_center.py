@@ -1,9 +1,28 @@
 # TelemetryBroker for Inter Process Communication for Robtics
 # Node as Remote Control via Console
 # Developed by Martin Novak at 2025/26
+import os
+
+
+def start_installer():
+    pip_install_start = [
+        "redis",
+        "psutil",
+        "rich"
+    ]
+
+    for lib in pip_install_start:
+        if os.name == 'posix':
+            os.system(f"pip install {lib} --break-system-packages")
+        elif os.name == 'nt':
+            os.system(f"pip install {lib}")
+        else:
+            print("Unknown OS")
+
+start_installer()
+
 from libs.lib_telemtrybroker import TelemetryBroker
 import time
-import os
 from pathlib import Path
 import psutil
 from rich.live import Live
@@ -279,7 +298,6 @@ def menu_show_live_data():
             subprocess.Popen(f'start cmd /k "{command}"', shell=True)
 
 
-start_installer()
 mb.clearall()
 
 while True:
